@@ -59,7 +59,7 @@ public class BillingServiceTest extends ServiceTestCase<BillingService> {
 
 	@SmallTest
 	public void testRestoreTransactions() throws Exception {
-		BillingService.restoreTransations(getContext(), NONCE);
+		BillingService.restoreTransactions(getContext(), NONCE);
 	}	
 
 	@SmallTest

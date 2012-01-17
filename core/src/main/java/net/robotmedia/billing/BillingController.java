@@ -511,7 +511,7 @@ public class BillingController {
 	 */
 	public static void restoreTransactions(Context context) {
 		final long nonce = Security.generateNonce();
-		BillingService.restoreTransations(context, nonce);
+		BillingService.restoreTransactions(context, nonce);
 	}
 
 	/**

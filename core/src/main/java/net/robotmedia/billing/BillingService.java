@@ -31,11 +31,17 @@ import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class BillingService extends Service implements ServiceConnection {
 
 	private static enum Action {
-		CHECK_BILLING_SUPPORTED, CONFIRM_NOTIFICATIONS, GET_PURCHASE_INFORMATION, REQUEST_PURCHASE, RESTORE_TRANSACTIONS,
+		CHECK_BILLING_SUPPORTED,
+		CONFIRM_NOTIFICATIONS,
+		GET_PURCHASE_INFORMATION,
+		REQUEST_PURCHASE,
+		RESTORE_TRANSACTIONS,
 	}
 
 	private static final String ACTION_MARKET_BILLING_SERVICE = "com.android.vending.billing.MarketBillingService.BIND";
@@ -44,7 +50,8 @@ public class BillingService extends Service implements ServiceConnection {
 	private static final String EXTRA_ITEM_ID = "ITEM_ID";
 	private static final String EXTRA_NONCE = "EXTRA_NONCE";
 	private static final String EXTRA_NOTIFY_IDS = "NOTIFY_IDS";
-	private static LinkedList<BillingRequest> mPendingRequests = new LinkedList<BillingRequest>();
+
+	private static final LinkedList<BillingRequest> mPendingRequests = new LinkedList<BillingRequest>();
 
 	private static IMarketBillingService mService;
 
@@ -66,7 +73,7 @@ public class BillingService extends Service implements ServiceConnection {
 		return intent;
 	}
 
-	private static final String getActionForIntent(Context context, Action action) {
+	private static String getActionForIntent(Context context, Action action) {
 		return context.getPackageName() + "." + action.toString();
 	}
 
@@ -84,7 +91,7 @@ public class BillingService extends Service implements ServiceConnection {
 		context.startService(intent);
 	}
 
-	public static void restoreTransations(Context context, long nonce) {
+	public static void restoreTransactions(Context context, long nonce) {
 		final Intent intent = createIntent(context, Action.RESTORE_TRANSACTIONS);
 		intent.setClass(context, BillingService.class);
 		intent.putExtra(EXTRA_NONCE, nonce);
@@ -115,6 +122,7 @@ public class BillingService extends Service implements ServiceConnection {
 		runRequestOrQueue(request);
 	}
 
+	@Nullable
 	private Action getActionFromIntent(Intent intent) {
 		final String actionString = intent.getAction();
 		if (actionString == null) {
@@ -157,35 +165,35 @@ public class BillingService extends Service implements ServiceConnection {
 	// method will not be called.
 	@Override
 	public void onStart(Intent intent, int startId) {
-	    handleCommand(intent, startId);
+		handleCommand(intent, startId);
 	}
 
 	// @Override // Avoid compile errors on pre-2.0
 	public int onStartCommand(Intent intent, int flags, int startId) {
-	    handleCommand(intent, startId);
-	    return Compatibility.START_NOT_STICKY;
+		handleCommand(intent, startId);
+		return Compatibility.START_NOT_STICKY;
 	}
-	
+
 	private void handleCommand(Intent intent, int startId) {
 		final Action action = getActionFromIntent(intent);
 		if (action == null) {
 			return;
 		}
-		switch (action) {			
-		case CHECK_BILLING_SUPPORTED:
-			checkBillingSupported(startId);
-			break;
-		case REQUEST_PURCHASE:
-			requestPurchase(intent, startId);
-			break;
-		case GET_PURCHASE_INFORMATION:
-			getPurchaseInformation(intent, startId);
-			break;
-		case CONFIRM_NOTIFICATIONS:
-			confirmNotifications(intent, startId);
-			break;
-		case RESTORE_TRANSACTIONS:
-			restoreTransactions(intent, startId);
+		switch (action) {
+			case CHECK_BILLING_SUPPORTED:
+				checkBillingSupported(startId);
+				break;
+			case REQUEST_PURCHASE:
+				requestPurchase(intent, startId);
+				break;
+			case GET_PURCHASE_INFORMATION:
+				getPurchaseInformation(intent, startId);
+				break;
+			case CONFIRM_NOTIFICATIONS:
+				confirmNotifications(intent, startId);
+				break;
+			case RESTORE_TRANSACTIONS:
+				restoreTransactions(intent, startId);
 		}
 	}
 
@@ -207,7 +215,7 @@ public class BillingService extends Service implements ServiceConnection {
 
 	private void runPendingRequests() {
 		BillingRequest request;
-		int maxStartId = -1;		
+		int maxStartId = -1;
 		while ((request = mPendingRequests.peek()) != null) {
 			if (mService != null) {
 				runRequest(request);
@@ -237,13 +245,13 @@ public class BillingService extends Service implements ServiceConnection {
 
 	private void runRequestOrQueue(BillingRequest request) {
 		mPendingRequests.add(request);
-		if (mService == null) {			
-			bindMarketBillingService();		
+		if (mService == null) {
+			bindMarketBillingService();
 		} else {
 			runPendingRequests();
 		}
 	}
-	
+
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
