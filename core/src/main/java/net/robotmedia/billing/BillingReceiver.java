@@ -44,7 +44,7 @@ public class BillingReceiver extends BroadcastReceiver {
         } else if (ACTION_NOTIFY.equals(action)) {
             notify(context, intent);
         } else if (ACTION_RESPONSE_CODE.equals(action)) {
-        	responseCode(context, intent);
+        	responseCode(intent);
         } else {
             Log.w(this.getClass().getSimpleName(), "Unexpected action: " + action);
         }
@@ -61,10 +61,10 @@ public class BillingReceiver extends BroadcastReceiver {
         BillingController.onNotify(context, notifyId);
 	}
 	
-	private void responseCode(Context context, Intent intent) {
+	private void responseCode(Intent intent) {
         final long requestId = intent.getLongExtra(EXTRA_REQUEST_ID, -1);
         final int responseCode = intent.getIntExtra(EXTRA_RESPONSE_CODE, 0);
-        BillingController.onResponseCode(context, requestId, responseCode);
+        BillingController.onResponseCode(requestId, responseCode);
 	}
 	
 }

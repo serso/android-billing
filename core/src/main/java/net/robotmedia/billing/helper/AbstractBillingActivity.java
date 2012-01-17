@@ -17,7 +17,7 @@ package net.robotmedia.billing.helper;
 
 import net.robotmedia.billing.BillingController;
 import net.robotmedia.billing.BillingController.BillingStatus;
-import net.robotmedia.billing.requests.BillingRequest.ResponseCode;
+import net.robotmedia.billing.requests.ResponseCode;
 import net.robotmedia.billing.model.Transaction.PurchaseState;
 import android.app.Activity;
 

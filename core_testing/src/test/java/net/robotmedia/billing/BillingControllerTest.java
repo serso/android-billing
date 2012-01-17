@@ -19,7 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import net.robotmedia.billing.requests.BillingRequest.ResponseCode;
+import net.robotmedia.billing.requests.ResponseCode;
 import net.robotmedia.billing.model.BillingDB;
 import net.robotmedia.billing.model.BillingDBTest;
 import net.robotmedia.billing.model.Transaction;
@@ -118,7 +118,7 @@ public class BillingControllerTest extends AndroidTestCase {
 			public void onTransactionsRestored() {}
 			public void onPurchaseIntent(String itemId, PendingIntent purchaseIntent) {}
 			public void onBillingChecked(boolean supported) {}
-			public void onRequestPurchaseResponse(String itemId, ResponseCode response) { 
+			public void onRequestPurchaseResponse(String itemId, ResponseCode response) {
 				flags.add(true);
 				assertEquals(testItemId, itemId);
 				assertEquals(testResponse, response);

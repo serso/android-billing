@@ -2,8 +2,8 @@ package net.robotmedia.billing.requests;
 
 import android.app.PendingIntent;
 import android.os.Bundle;
+import net.robotmedia.billing.BillingRequestType;
 import net.robotmedia.billing.BillingController;
-import net.robotmedia.billing.IBillingService;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -27,7 +27,7 @@ public class RequestPurchase extends BillingRequest {
 	}
 
 	@Override
-	protected void addParams(Bundle request) {
+	protected void addParams(@NotNull Bundle request) {
 		request.putString(KEY_ITEM_ID, itemId);
 		if (developerPayload != null) {
 			request.putString(KEY_DEVELOPER_PAYLOAD, developerPayload);
@@ -36,8 +36,8 @@ public class RequestPurchase extends BillingRequest {
 
 	@NotNull
 	@Override
-	public IBillingService.Action getRequestType() {
-		return IBillingService.Action.REQUEST_PURCHASE;
+	public BillingRequestType getRequestType() {
+		return BillingRequestType.REQUEST_PURCHASE;
 	}
 
 	@Override

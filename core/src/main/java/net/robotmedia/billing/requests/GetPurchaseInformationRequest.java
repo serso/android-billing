@@ -1,7 +1,7 @@
 package net.robotmedia.billing.requests;
 
 import android.os.Bundle;
-import net.robotmedia.billing.IBillingService;
+import net.robotmedia.billing.BillingRequestType;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -9,26 +9,26 @@ import org.jetbrains.annotations.NotNull;
 * Date: 1/17/12
 * Time: 12:45 PM
 */
-public class GetPurchaseInformation extends BillingRequest {
+public class GetPurchaseInformationRequest extends BillingRequest {
 
 	private String[] notifyIds;
 
 	private static final String KEY_NOTIFY_IDS = "NOTIFY_IDS";
 
-	public GetPurchaseInformation(String packageName, int startId, String[] notifyIds) {
-		super(packageName,startId);
+	public GetPurchaseInformationRequest(String packageName, int startId, String[] notifyIds, long nonce) {
+		super(packageName,startId, nonce);
 		this.notifyIds = notifyIds;
 	}
 
 	@Override
-	protected void addParams(Bundle request) {
+	protected void addParams(@NotNull Bundle request) {
 		request.putStringArray(KEY_NOTIFY_IDS, notifyIds);
 	}
 
 	@NotNull
 	@Override
-	public IBillingService.Action getRequestType() {
-		return IBillingService.Action.GET_PURCHASE_INFORMATION;
+	public BillingRequestType getRequestType() {
+		return BillingRequestType.GET_PURCHASE_INFORMATION;
 	}
 
 	@Override public boolean hasNonce() { return true; }

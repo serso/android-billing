@@ -15,7 +15,7 @@
 
 package net.robotmedia.billing;
 
-import net.robotmedia.billing.requests.BillingRequest.ResponseCode;
+import net.robotmedia.billing.requests.ResponseCode;
 import net.robotmedia.billing.model.Transaction.PurchaseState;
 import android.app.PendingIntent;
 

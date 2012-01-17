@@ -1,7 +1,7 @@
 package net.robotmedia.billing.requests;
 
+import net.robotmedia.billing.BillingRequestType;
 import net.robotmedia.billing.BillingController;
-import net.robotmedia.billing.IBillingService;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -9,16 +9,16 @@ import org.jetbrains.annotations.NotNull;
 * Date: 1/17/12
 * Time: 12:45 PM
 */
-public class RestoreTransactions extends BillingRequest {
+public class RestoreTransactionsRequest extends BillingRequest {
 
-	public RestoreTransactions(String packageName, int startId) {
-		super(packageName, startId);
+	public RestoreTransactionsRequest(String packageName, int startId, long nonce) {
+		super(packageName, startId, nonce);
 	}
 
 	@NotNull
 	@Override
-	public IBillingService.Action getRequestType() {
-		return IBillingService.Action.RESTORE_TRANSACTIONS;
+	public BillingRequestType getRequestType() {
+		return BillingRequestType.RESTORE_TRANSACTIONS;
 	}
 
 	@Override public boolean hasNonce() { return true; }

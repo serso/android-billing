@@ -20,40 +20,9 @@ import android.os.RemoteException;
 import android.util.Log;
 
 import com.android.vending.billing.IMarketBillingService;
-import net.robotmedia.billing.IBillingService;
 import org.jetbrains.annotations.NotNull;
 
-public abstract class BillingRequest {
-
-	public static enum ResponseCode {
-		RESULT_OK(0), // 0
-		RESULT_USER_CANCELED(1), // 1
-		RESULT_SERVICE_UNAVAILABLE(2), // 2
-		RESULT_BILLING_UNAVAILABLE(3), // 3
-		RESULT_ITEM_UNAVAILABLE(4), // 4
-		RESULT_DEVELOPER_ERROR(5), // 5
-		RESULT_ERROR(6);
-
-		private final int response;
-
-		ResponseCode(int response) {
-			this.response = response;
-		} // 6
-
-		public static boolean isOk(int response) {
-			return ResponseCode.RESULT_OK.response == response;
-		}
-
-		@NotNull
-		public static ResponseCode valueOf(int response) {
-			for (ResponseCode responseCode : values()) {
-				if (responseCode.response == response) {
-					return responseCode;
-				}
-			}
-			return RESULT_ERROR;
-		}
-	}
+public abstract class BillingRequest implements IBillingRequest {
 
 	private static final String KEY_BILLING_REQUEST = "BILLING_REQUEST";
 
@@ -66,32 +35,40 @@ public abstract class BillingRequest {
 	private static final String KEY_NONCE = "NONCE";
 
 	public static final long IGNORE_REQUEST_ID = -1;
+
+	@NotNull
 	private String packageName;
 
 	private int startId;
 	private boolean success;
 	private long nonce;
 
-	public BillingRequest(String packageName, int startId) {
+	public BillingRequest(@NotNull String packageName, int startId) {
 		this.packageName = packageName;
 		this.startId = startId;
 	}
 
-	protected void addParams(Bundle request) {
+	public BillingRequest(@NotNull String packageName, int startId, long nonce) {
+		this.packageName = packageName;
+		this.startId = startId;
+		this.nonce = nonce;
+	}
+
+	protected void addParams(@NotNull Bundle request) {
 		// Do nothing by default
 	}
 
+	@Override
 	public long getNonce() {
 		return nonce;
 	}
 
-	@NotNull
-	public abstract IBillingService.Action getRequestType();
-
+	@Override
 	public boolean hasNonce() {
 		return false;
 	}
 
+	@Override
 	public boolean isSuccess() {
 		return success;
 	}
@@ -107,6 +84,7 @@ public abstract class BillingRequest {
 		return request;
 	}
 
+	@Override
 	public void onResponseCode(ResponseCode response) {
 		// Do nothing by default
 	}
@@ -115,10 +93,12 @@ public abstract class BillingRequest {
 		// Do nothing by default
 	}
 
-	public long run(IMarketBillingService mService) throws RemoteException {
+	@Override
+	public long run(@NotNull IMarketBillingService service) throws RemoteException {
 		final Bundle request = makeRequestBundle();
 		addParams(request);
-		final Bundle response = mService.sendBillingRequest(request);
+
+		final Bundle response = service.sendBillingRequest(request);
 		if (validateResponse(response)) {
 			processOkResponse(response);
 			return response.getLong(KEY_REQUEST_ID, IGNORE_REQUEST_ID);
@@ -140,6 +120,7 @@ public abstract class BillingRequest {
 		return success;
 	}
 
+	@Override
 	public int getStartId() {
 		return startId;
 	}
