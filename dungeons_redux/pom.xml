@@ -21,4 +21,12 @@
 		<additionalLibs>${basedir}/src/misc/lib</additionalLibs>
 	</properties>
 
+	<dependencies>
+		<dependency>
+			<groupId>org.solovyev.android</groupId>
+			<artifactId>billing</artifactId>
+			<version>0.1</version>
+		</dependency>
+	</dependencies>
+
 </project>

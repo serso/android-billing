@@ -15,12 +15,9 @@
 
 package net.robotmedia.billing;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -130,7 +127,7 @@ public class BillingController {
 	public static boolean confirmNotifications(Context context, String itemId) {
 		final Set<String> notifications = manualConfirmations.get(itemId);
 		if (notifications != null) {
-			confirmNotifications(context, notifications.toArray(new String[] {}));
+			confirmNotifications(context, notifications);
 			return true;
 		} else {
 			return false;
@@ -145,6 +142,10 @@ public class BillingController {
 	 *            array with the ids of all the notifications to confirm.
 	 */
 	private static void confirmNotifications(Context context, String[] notifyIds) {
+		BillingService.confirmNotifications(context, notifyIds);
+	}
+
+	private static void confirmNotifications(@NotNull Context context, @NotNull Collection<String> notifyIds) {
 		BillingService.confirmNotifications(context, notifyIds);
 	}
 

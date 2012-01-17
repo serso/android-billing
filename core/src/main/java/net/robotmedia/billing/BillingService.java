@@ -15,6 +15,7 @@
 
 package net.robotmedia.billing;
 
+import java.util.Collection;
 import java.util.LinkedList;
 
 import static net.robotmedia.billing.BillingRequest.*;
@@ -53,28 +54,34 @@ public class BillingService extends Service implements ServiceConnection {
 
 	private static final LinkedList<BillingRequest> mPendingRequests = new LinkedList<BillingRequest>();
 
+	@Nullable
 	private static IMarketBillingService mService;
 
-	public static void checkBillingSupported(Context context) {
-		final Intent intent = createIntent(context, Action.CHECK_BILLING_SUPPORTED);
-		context.startService(intent);
+	public static void checkBillingSupported(@NotNull Context context) {
+		context.startService(createIntent(context, Action.CHECK_BILLING_SUPPORTED));
 	}
 
-	public static void confirmNotifications(Context context, String[] notifyIds) {
+	public static void confirmNotifications(@NotNull Context context, String[] notifyIds) {
 		final Intent intent = createIntent(context, Action.CONFIRM_NOTIFICATIONS);
 		intent.putExtra(EXTRA_NOTIFY_IDS, notifyIds);
 		context.startService(intent);
 	}
 
-	private static Intent createIntent(Context context, Action action) {
-		final String actionString = getActionForIntent(context, action);
-		final Intent intent = new Intent(actionString);
-		intent.setClass(context, BillingService.class);
-		return intent;
+	public static void confirmNotifications(@NotNull Context context, @NotNull Collection<String> notifyIds) {
+		confirmNotifications(context, notifyIds.toArray(new String[notifyIds.size()]));
 	}
 
-	private static String getActionForIntent(Context context, Action action) {
-		return context.getPackageName() + "." + action.toString();
+	private static Intent createIntent(Context context, Action action) {
+		final Intent result = new Intent(getActionForIntent(context, action));
+
+		result.setClass(context, BillingService.class);
+
+		return result;
+	}
+
+	@NotNull
+	private static String getActionForIntent(@NotNull Context context, @NotNull Action action) {
+		return context.getPackageName() + "." + action.name();
 	}
 
 	public static void getPurchaseInformation(Context context, String[] notifyIds, long nonce) {

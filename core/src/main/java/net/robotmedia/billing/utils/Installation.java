@@ -22,38 +22,47 @@ import java.io.RandomAccessFile;
 import java.util.UUID;
 
 import android.content.Context;
+import org.jetbrains.annotations.NotNull;
 
 public class Installation {
+
 	private static final String INSTALLATION = "INSTALLATION";
+
 	private static String sID = null;
 
-	public synchronized static String id(Context context) {
+	public synchronized static String id(@NotNull Context context) {
 		if (sID == null) {
-			File installation = new File(context.getFilesDir(), INSTALLATION);
+			final File installation = new File(context.getFilesDir(), INSTALLATION);
 			try {
 				if (!installation.exists()) {
-					writeInstallationFile(installation);
+					sID = writeInstallationFile(installation);
+				} else {
+					sID = readInstallationFile(installation);
 				}
-				sID = readInstallationFile(installation);
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
 		}
+
 		return sID;
 	}
 
-	private static String readInstallationFile(File installation) throws IOException {
-		RandomAccessFile f = new RandomAccessFile(installation, "r");
+	@NotNull
+	private static String readInstallationFile(@NotNull File installation) throws IOException {
+		final RandomAccessFile f = new RandomAccessFile(installation, "r");
 		byte[] bytes = new byte[(int) f.length()];
 		f.readFully(bytes);
 		f.close();
 		return new String(bytes);
 	}
 
-	private static void writeInstallationFile(File installation) throws IOException {
-		FileOutputStream out = new FileOutputStream(installation);
-		String id = UUID.randomUUID().toString();
+	@NotNull
+	private static String writeInstallationFile(@NotNull File installation) throws IOException {
+		final FileOutputStream out = new FileOutputStream(installation);
+
+		final String id = UUID.randomUUID().toString();
 		out.write(id.getBytes());
 		out.close();
+		return id;
 	}
 }

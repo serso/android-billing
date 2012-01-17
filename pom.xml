@@ -10,7 +10,6 @@
 	<version>0.1</version>
 
 	<modules>
-		<module>../android_common</module>
 		<module>core</module>
 		<module>core_testing</module>
 		<module>dungeons_redux</module>
@@ -35,12 +34,6 @@
 			<groupId>org.solovyev</groupId>
 			<artifactId>common</artifactId>
 			<version>0.3</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.solovyev.android</groupId>
-			<artifactId>common</artifactId>
-			<version>0.1</version>
 		</dependency>
 
 		<dependency>
