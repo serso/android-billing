@@ -72,7 +72,7 @@ public class BillingService extends Service implements ServiceConnection, IBilli
 		context.startService(intent);
 	}
 
-	public static void requestPurchase(@NotNull Context context, String itemId, @Nullable String developerPayload) {
+	public static void requestPurchase(@NotNull Context context, @NotNull String itemId, @Nullable String developerPayload) {
 		final Intent intent = createIntent(context, BillingRequestType.REQUEST_PURCHASE);
 		intent.putExtra(BillingRequestType.EXTRA_ITEM_ID, itemId);
 		intent.putExtra(BillingRequestType.EXTRA_DEVELOPER_PAYLOAD, developerPayload);

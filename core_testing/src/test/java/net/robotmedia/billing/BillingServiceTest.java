@@ -19,13 +19,16 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.test.ServiceTestCase;
 import android.test.suitebuilder.annotation.SmallTest;
+import junit.framework.Assert;
 
-public class BillingServiceTest extends ServiceTestCase<IBillingService> {
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+public class BillingServiceTest extends ServiceTestCase<BillingService> {
 
 	private final static long NONCE = 147;
-	private final static String[] NOTIFY_IDS = new String[] { "test" };
 	private final static String ITEM_ID = "android.test.purchased";
-	
+
 	public BillingServiceTest() {
 		super(BillingService.class);
 	}
@@ -44,12 +47,12 @@ public class BillingServiceTest extends ServiceTestCase<IBillingService> {
 
 	@SmallTest
 	public void testConfirmNotifications() throws Exception {
-		BillingService.confirmNotifications(getContext(), NOTIFY_IDS);
+		BillingService.confirmNotifications(getContext(), new String[]{"test"});
 	}
 
 	@SmallTest
 	public void testGetPurchaseInformation() throws Exception {
-		BillingService.getPurchaseInformation(getContext(), NOTIFY_IDS, NONCE);
+		BillingService.getPurchaseInformation(getContext(), new String[]{"test"}, NONCE);
 	}	
 
 	@SmallTest
@@ -69,4 +72,34 @@ public class BillingServiceTest extends ServiceTestCase<IBillingService> {
         final IBinder service = bindService(intent); 
         assertNull(service);
     }
+
+
+	@SmallTest
+	public void testSynchronization() throws Exception {
+		final int TEST_COUNT = 100;
+		final CountDownLatch latch = new CountDownLatch(1);
+
+		final CountDownLatch testCompletedLatch = new CountDownLatch(TEST_COUNT);
+
+		for ( int i = 0; i < TEST_COUNT; i++ ) {
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						latch.await();
+						BillingService.requestPurchase(getContext(), ITEM_ID, null);
+					} catch (InterruptedException e) {
+					} finally {
+						testCompletedLatch.countDown();
+					}
+				}
+			}).start();
+		}
+
+		latch.countDown();
+
+		if ( !testCompletedLatch.await(3, TimeUnit.SECONDS) ) {
+			Assert.fail();
+		}
+	}
 }
