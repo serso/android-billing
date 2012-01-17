@@ -15,60 +15,65 @@
 
 package net.robotmedia.billing.utils;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-
 import android.app.Activity;
 import android.app.Service;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.util.Log;
+import org.jetbrains.annotations.NotNull;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 public class Compatibility {
-    private static Method startIntentSender;
-    public static int START_NOT_STICKY;
-    @SuppressWarnings("rawtypes")
-	private static final Class[] START_INTENT_SENDER_SIG = new Class[] {
-        IntentSender.class, Intent.class, int.class, int.class, int.class
-    };
-    
+
+	private static Method startIntentSender;
+	public static int START_NOT_STICKY;
+
+	@SuppressWarnings("rawtypes")
+	private static final Class[] START_INTENT_SENDER_SIG = new Class[]{
+			IntentSender.class, Intent.class, int.class, int.class, int.class
+	};
+
 	static {
 		initCompatibility();
-	};
+	}
 
 	private static void initCompatibility() {
 		try {
 			final Field field = Service.class.getField("START_NOT_STICKY");
 			START_NOT_STICKY = field.getInt(null);
 		} catch (Exception e) {
-			START_NOT_STICKY = 2;			
+			START_NOT_STICKY = 2;
 		}
+
 		try {
-        	startIntentSender = Activity.class.getMethod("startIntentSender",
-                    START_INTENT_SENDER_SIG);
-        } catch (SecurityException e) {
-        	startIntentSender = null;
-        } catch (NoSuchMethodException e) {
-        	startIntentSender = null;
-        }
+			startIntentSender = Activity.class.getMethod("startIntentSender", START_INTENT_SENDER_SIG);
+		} catch (SecurityException e) {
+			startIntentSender = null;
+		} catch (NoSuchMethodException e) {
+			startIntentSender = null;
+		}
 	}
-	
-	public static void startIntentSender(Activity activity, IntentSender intentSender, Intent intent) {
-       if (startIntentSender != null) {
-    	    final Object[] args = new Object[5];
-    	    args[0] = intentSender;
-    	    args[1] = intent;
-    	    args[2] = Integer.valueOf(0);
-    	    args[3] = Integer.valueOf(0);
-    	    args[4] = Integer.valueOf(0);
-            try {
-            	startIntentSender.invoke(activity, args);
+
+	public static void startIntentSender(@NotNull Activity activity, @NotNull IntentSender intentSender, @NotNull Intent intent) {
+		if (startIntentSender != null) {
+
+			final Object[] args = new Object[5];
+			args[0] = intentSender;
+			args[1] = intent;
+			args[2] = Integer.valueOf(0);
+			args[3] = Integer.valueOf(0);
+			args[4] = Integer.valueOf(0);
+
+			try {
+				startIntentSender.invoke(activity, args);
 			} catch (Exception e) {
 				Log.e(Compatibility.class.getSimpleName(), "startIntentSender", e);
 			}
-       }
+		}
 	}
-	
+
 	public static boolean isStartIntentSenderSupported() {
 		return startIntentSender != null;
 	}

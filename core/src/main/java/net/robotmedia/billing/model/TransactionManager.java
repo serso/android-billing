@@ -15,63 +15,141 @@
 
 package net.robotmedia.billing.model;
 
+import android.content.Context;
+import android.database.Cursor;
+import net.robotmedia.billing.model.Transaction.PurchaseState;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import net.robotmedia.billing.model.Transaction.PurchaseState;
-import android.content.Context;
-import android.database.Cursor;
-
 public class TransactionManager {
-	
-	public synchronized static void addTransaction(Context context, Transaction transaction) {
-		BillingDB db = new BillingDB(context);
-		db.insert(transaction);
-		db.close();
+
+	public synchronized static void addTransaction(@NotNull Context context, @NotNull Transaction transaction) {
+		final BillingDB db = new BillingDB(context);
+		try {
+			db.insert(transaction);
+		} finally {
+			db.close();
+		}
 	}
-	
-	public synchronized static boolean isPurchased(Context context, String itemId) {
+
+	public synchronized static boolean isPurchased(@NotNull Context context, @NotNull String itemId) {
 		return countPurchases(context, itemId) > 0;
 	}
-	
-	public synchronized static int countPurchases(Context context, String itemId) {
-		BillingDB db = new BillingDB(context);
-		final Cursor c = db.queryTransactions(itemId, PurchaseState.PURCHASED);
-		int count = 0;
-        if (c != null) {
-        	count = c.getCount();
-        	c.close();
-        }
-		db.close();
-		return count;
-	}
-	
-	public synchronized static List<Transaction> getTransactions(Context context) {
-		BillingDB db = new BillingDB(context);
-		final Cursor c = db.queryTransactions();
-		final List<Transaction> transactions = cursorToList(c);
-		db.close();
-		return transactions;
+
+	public synchronized static int countPurchases(@NotNull Context context, @NotNull String itemId) {
+		return doDatabaseOperation(context, new CountPurchases(itemId));
 	}
 
-	private static List<Transaction> cursorToList(final Cursor c) {
-		final List<Transaction> transactions = new ArrayList<Transaction>();
-        if (c != null) {
-        	while (c.moveToNext()) {
-        		final Transaction purchase = BillingDB.createTransaction(c);
-        		transactions.add(purchase);
-        	}
-        	c.close();
-        }
-		return transactions;
+	@NotNull
+	public synchronized static List<Transaction> getTransactions(@NotNull Context context) {
+		return doDatabaseOperation(context, new TransactionsByItemId(null));
 	}
-	
-	public synchronized static List<Transaction> getTransactions(Context context, String itemId) {
-		BillingDB db = new BillingDB(context);
-		final Cursor c = db.queryTransactions(itemId);
-		final List<Transaction> transactions = cursorToList(c);
-		db.close();
-		return transactions;
+
+	@NotNull
+	private static List<Transaction> getTransactionsFromCursor(@NotNull final Cursor cursor) {
+		final List<Transaction> result = new ArrayList<Transaction>();
+
+		while (cursor.moveToNext()) {
+			result.add(BillingDB.createTransaction(cursor));
+		}
+
+		return result;
 	}
-	
+
+	@NotNull
+	public synchronized static List<Transaction> getTransactions(@NotNull Context context, @NotNull String itemId) {
+		return doDatabaseOperation(context, new TransactionsByItemId(itemId));
+	}
+
+	private static class CountPurchases implements DatabaseOperation<Integer> {
+
+		@NotNull
+		private final String itemId;
+
+		public CountPurchases(@NotNull String itemId) {
+			this.itemId = itemId;
+		}
+
+		@NotNull
+		@Override
+		public Cursor createCursor(@NotNull BillingDB db) {
+			return db.getTransactionsQuery(itemId, PurchaseState.PURCHASED);
+		}
+
+		@NotNull
+		@Override
+		public Integer doOperation(@NotNull Cursor cursor) {
+			return cursor.getCount();
+		}
+	}
+
+	private static class TransactionsByItemId implements DatabaseOperation<List<Transaction>> {
+
+		@Nullable
+		private final String item;
+
+		public TransactionsByItemId(@Nullable String item) {
+			this.item = item;
+		}
+
+		@NotNull
+		@Override
+		public Cursor createCursor(@NotNull BillingDB db) {
+			if (item != null) {
+				return db.getTransactionsQuery(item);
+			} else {
+				return db.getAllTransactionsQuery();
+			}
+		}
+
+		@NotNull
+		@Override
+		public List<Transaction> doOperation(@NotNull Cursor cursor) {
+			return getTransactionsFromCursor(cursor);
+		}
+	}
+
+	private static interface DatabaseOperation<T> {
+
+		@NotNull
+		Cursor createCursor(@NotNull BillingDB db);
+
+		@NotNull
+		T doOperation(@NotNull Cursor cursor);
+	}
+
+	@NotNull
+	private static <T> T doDatabaseOperation(@NotNull Context context, @NotNull DatabaseOperation<T> operation) {
+		final T result;
+
+		BillingDB db = null;
+		try {
+			// open database
+			db = new BillingDB(context);
+
+			Cursor cursor = null;
+			try {
+				// open cursor
+				cursor = operation.createCursor(db);
+				// do operation
+				result = operation.doOperation(cursor);
+			} finally {
+				// anyway if cursor was opened - close it
+				if (cursor != null) {
+					cursor.close();
+				}
+			}
+		} finally {
+			// anyway if database was opened - close it
+			if (db != null) {
+				db.close();
+			}
+		}
+
+		return result;
+	}
+
 }

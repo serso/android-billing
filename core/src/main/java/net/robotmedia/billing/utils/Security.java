@@ -15,54 +15,104 @@
 
 package net.robotmedia.billing.utils;
 
-import java.security.SecureRandom;
-import java.util.HashSet;
-
-import net.robotmedia.billing.utils.AESObfuscator.ValidationException;
-
 import android.content.Context;
 import android.provider.Settings;
 import android.util.Log;
+import net.robotmedia.billing.utils.AESObfuscator.ValidationException;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.security.SecureRandom;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Security {
 
-	private static HashSet<Long> knownNonces = new HashSet<Long>();
+	private static final Set<Long> knownNonces = new HashSet<Long>();
 	private static final SecureRandom RANDOM = new SecureRandom();
 	private static final String TAG = Security.class.getSimpleName();
 
-	/** Generates a nonce (a random number used once). */
+	@Nullable
+	private static AESObfuscator obfuscator = null;
+
+	@NotNull
+	private static final Object obfuscatorLock = new Object();
+
+
+	/** Generate and register nonce
+	 * @return nonce. This method guarantees that created nonce will be unique (i.e. there is only one instance of registered nonce)
+	 *
+	 */
 	public static long generateNonce() {
-		long nonce = RANDOM.nextLong();
-		knownNonces.add(nonce);
+		long nonce;
+
+		// todo serso: optimize
+		// actually there we can fo some optimization but it seems that it is not a bottleneck
+		synchronized (knownNonces) {
+			do {
+				nonce = RANDOM.nextLong();
+			} while (knownNonces.contains(nonce));
+			knownNonces.add(nonce);
+		}
+
 		return nonce;
 	}
 
 	public static boolean isNonceKnown(long nonce) {
-		return knownNonces.contains(nonce);
+		synchronized (knownNonces) {
+			return knownNonces.contains(nonce);
+		}
 	}
 
 	public static void removeNonce(long nonce) {
-		knownNonces.remove(nonce);
-	}
-	
-	public static String obfuscate(Context context, byte[] salt, String original) {
-		final AESObfuscator obfuscator = getObfuscator(context, salt);
-		return obfuscator.obfuscate(original);
-	}
-	
-	private static AESObfuscator _obfuscator = null;
-	
-	private static AESObfuscator getObfuscator(Context context, byte[] salt) {
-		if (_obfuscator == null) {
-			final String installationId = Installation.id(context);
-			final String deviceId = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
-			final String password = installationId + deviceId + context.getPackageName();
-			_obfuscator = new AESObfuscator(salt, password);
+		synchronized (knownNonces) {
+			knownNonces.remove(nonce);
 		}
-		return _obfuscator;
 	}
-		
-	public static String unobfuscate(Context context, byte[] salt, String obfuscated) {
+
+	/**
+	 * Obfuscates the source string using AES algorithm with specified salt
+	 *
+	 * @param context context
+	 * @param salt salt to beb used for obfuscation
+	 * @param source string to be obfuscated
+	 *
+	 * @return obfuscated string. Null can be returned only if source string is null
+	 */
+	@Nullable
+	public static String obfuscate(@NotNull Context context, @Nullable byte[] salt, @Nullable String source) {
+		return getObfuscator(context, salt).obfuscate(source);
+	}
+
+	@NotNull
+	private static AESObfuscator getObfuscator(@NotNull Context context, @Nullable byte[] salt) {
+		// todo serso: optimize synchronization
+		// obfuscatorLock object used only in order not to lock the whole class by synchronizing method
+		synchronized (obfuscatorLock) {
+			if (obfuscator == null) {
+
+				final String installationId = Installation.id(context);
+				final String deviceId = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+				final String password = installationId + deviceId + context.getPackageName();
+
+				obfuscator = new AESObfuscator(salt, password);
+			}
+
+			return obfuscator;
+		}
+	}
+
+	/**
+	 * Method unobfuscates the string using AES algorithm with specified salt.
+	 *
+	 * @param context context
+	 * @param salt unobfuscation salt (must be provided the same as was used in obfuscation)
+	 * @param obfuscated string to be unobfuscated
+	 *
+	 * @return unobfuscated string. Null returned in two cases: either obfuscated string is null or unobfuscation failed due to some errors
+	 */
+	@Nullable
+	public static String unobfuscate(@NotNull Context context, @Nullable byte[] salt, @Nullable String obfuscated) {
 		final AESObfuscator obfuscator = getObfuscator(context, salt);
 		try {
 			return obfuscator.unobfuscate(obfuscated);

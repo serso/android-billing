@@ -38,7 +38,7 @@ public class BillingDBTest extends AndroidTestCase {
 	}
 	
 	public static final void deleteDB(BillingDB data) {
-		data.mDb.delete(BillingDB.TABLE_TRANSACTIONS, null, null);
+		data.db.delete(BillingDB.TABLE_TRANSACTIONS, null, null);
 		data.close();
 	}
 	
@@ -51,7 +51,7 @@ public class BillingDBTest extends AndroidTestCase {
 	@SmallTest
 	public void testInsert() throws Exception {
 		mData.insert(TransactionTest.TRANSACTION_1);
-		final Cursor cursor = mData.queryTransactions();
+		final Cursor cursor = mData.getAllTransactionsQuery();
 		assertEquals(cursor.getCount(), 1);
 		cursor.moveToNext();
 		final Transaction stored = BillingDB.createTransaction(cursor);
@@ -64,18 +64,18 @@ public class BillingDBTest extends AndroidTestCase {
 	public void testUnique() throws Exception {
 		mData.insert(TransactionTest.TRANSACTION_1);
 		mData.insert(TransactionTest.TRANSACTION_1);
-		final Cursor cursor = mData.queryTransactions();
+		final Cursor cursor = mData.getAllTransactionsQuery();
 		assertEquals(cursor.getCount(), 1);
 	}
 	
 	@SmallTest
 	public void testQueryTransactions() throws Exception {
-		final Cursor cursor1 = mData.queryTransactions();
+		final Cursor cursor1 = mData.getAllTransactionsQuery();
 		assertEquals(cursor1.getCount(), 0);
 		cursor1.close();
 
 		mData.insert(TransactionTest.TRANSACTION_1);
-		final Cursor cursor2 = mData.queryTransactions();
+		final Cursor cursor2 = mData.getAllTransactionsQuery();
 		assertEquals(cursor2.getCount(), 1);
 		cursor2.moveToNext();
 		final Transaction stored = BillingDB.createTransaction(cursor2);
@@ -85,19 +85,19 @@ public class BillingDBTest extends AndroidTestCase {
 		cursor2.close();
 
 		mData.insert(TransactionTest.TRANSACTION_2_REFUNDED);
-		final Cursor cursor3 = mData.queryTransactions();
+		final Cursor cursor3 = mData.getAllTransactionsQuery();
 		assertEquals(cursor3.getCount(), 2);
 		cursor3.close();
 	}
 	
 	@SmallTest
 	public void testQueryTransactionsString() throws Exception {
-		final Cursor cursor1 = mData.queryTransactions(TransactionTest.TRANSACTION_1.productId);
+		final Cursor cursor1 = mData.getTransactionsQuery(TransactionTest.TRANSACTION_1.productId);
 		assertEquals(cursor1.getCount(), 0);
 		cursor1.close();
 
 		mData.insert(TransactionTest.TRANSACTION_1);
-		final Cursor cursor2 = mData.queryTransactions(TransactionTest.TRANSACTION_1.productId);
+		final Cursor cursor2 = mData.getTransactionsQuery(TransactionTest.TRANSACTION_1.productId);
 		assertEquals(cursor2.getCount(), 1);
 		cursor2.moveToNext();
 		final Transaction stored = BillingDB.createTransaction(cursor2);
@@ -107,20 +107,20 @@ public class BillingDBTest extends AndroidTestCase {
 		cursor2.close();
 
 		mData.insert(TransactionTest.TRANSACTION_2_REFUNDED);
-		final Cursor cursor3 = mData.queryTransactions(TransactionTest.TRANSACTION_1.productId);
+		final Cursor cursor3 = mData.getTransactionsQuery(TransactionTest.TRANSACTION_1.productId);
 		assertEquals(cursor3.getCount(), 1);
 		cursor3.close();
 	}
 	
 	@SmallTest
 	public void testQueryTransactionsStringPurchaseState() throws Exception {
-		final Cursor cursor1 = mData.queryTransactions(TransactionTest.TRANSACTION_1.productId, TransactionTest.TRANSACTION_1.purchaseState);
+		final Cursor cursor1 = mData.getTransactionsQuery(TransactionTest.TRANSACTION_1.productId, TransactionTest.TRANSACTION_1.purchaseState);
 		assertEquals(cursor1.getCount(), 0);
 		cursor1.close();
 
 		mData.insert(TransactionTest.TRANSACTION_1);
 		mData.insert(TransactionTest.TRANSACTION_2_REFUNDED);
-		final Cursor cursor2 = mData.queryTransactions(TransactionTest.TRANSACTION_1.productId, TransactionTest.TRANSACTION_1.purchaseState);
+		final Cursor cursor2 = mData.getTransactionsQuery(TransactionTest.TRANSACTION_1.productId, TransactionTest.TRANSACTION_1.purchaseState);
 		assertEquals(cursor2.getCount(), 1);
 		cursor2.moveToNext();
 		final Transaction stored = BillingDB.createTransaction(cursor2);

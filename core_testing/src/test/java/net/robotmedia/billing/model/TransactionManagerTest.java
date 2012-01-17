@@ -26,7 +26,7 @@ public class TransactionManagerTest extends AndroidTestCase {
 	protected void tearDown() throws Exception {
 		super.tearDown();
 		BillingDB mData = new BillingDB(getContext());
-		mData.mDb.delete(BillingDB.TABLE_TRANSACTIONS, null, null);
+		mData.db.delete(BillingDB.TABLE_TRANSACTIONS, null, null);
 		mData.close();
 	}
 	

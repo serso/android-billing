@@ -34,6 +34,7 @@ public enum ResponseCode {
 				return responseCode;
 			}
 		}
+
 		return RESULT_ERROR;
 	}
 }
