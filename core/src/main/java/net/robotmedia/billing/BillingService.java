@@ -18,8 +18,7 @@ package net.robotmedia.billing;
 import java.util.Collection;
 import java.util.LinkedList;
 
-import static net.robotmedia.billing.BillingRequest.*;
-
+import net.robotmedia.billing.requests.*;
 import net.robotmedia.billing.utils.Compatibility;
 
 import com.android.vending.billing.IMarketBillingService;
@@ -35,22 +34,9 @@ import android.util.Log;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class BillingService extends Service implements ServiceConnection {
-
-	private static enum Action {
-		CHECK_BILLING_SUPPORTED,
-		CONFIRM_NOTIFICATIONS,
-		GET_PURCHASE_INFORMATION,
-		REQUEST_PURCHASE,
-		RESTORE_TRANSACTIONS,
-	}
+public class BillingService extends Service implements ServiceConnection, IBillingService {
 
 	private static final String ACTION_MARKET_BILLING_SERVICE = "com.android.vending.billing.MarketBillingService.BIND";
-	private static final String EXTRA_DEVELOPER_PAYLOAD = "DEVELOPER_PAYLOAD";
-
-	private static final String EXTRA_ITEM_ID = "ITEM_ID";
-	private static final String EXTRA_NONCE = "EXTRA_NONCE";
-	private static final String EXTRA_NOTIFY_IDS = "NOTIFY_IDS";
 
 	private static final LinkedList<BillingRequest> mPendingRequests = new LinkedList<BillingRequest>();
 
@@ -61,7 +47,7 @@ public class BillingService extends Service implements ServiceConnection {
 		context.startService(createIntent(context, Action.CHECK_BILLING_SUPPORTED));
 	}
 
-	public static void confirmNotifications(@NotNull Context context, String[] notifyIds) {
+	public static void confirmNotifications(@NotNull Context context, @NotNull String[] notifyIds) {
 		final Intent intent = createIntent(context, Action.CONFIRM_NOTIFICATIONS);
 		intent.putExtra(EXTRA_NOTIFY_IDS, notifyIds);
 		context.startService(intent);
@@ -71,38 +57,38 @@ public class BillingService extends Service implements ServiceConnection {
 		confirmNotifications(context, notifyIds.toArray(new String[notifyIds.size()]));
 	}
 
-	private static Intent createIntent(Context context, Action action) {
-		final Intent result = new Intent(getActionForIntent(context, action));
-
-		result.setClass(context, BillingService.class);
-
-		return result;
+	public static void getPurchaseInformation(@NotNull Context context, @NotNull Collection<String> notifyIds, long nonce) {
+		getPurchaseInformation(context, notifyIds.toArray(new String[notifyIds.size()]), nonce);
 	}
 
-	@NotNull
-	private static String getActionForIntent(@NotNull Context context, @NotNull Action action) {
-		return context.getPackageName() + "." + action.name();
-	}
-
-	public static void getPurchaseInformation(Context context, String[] notifyIds, long nonce) {
+	public static void getPurchaseInformation(@NotNull Context context, @NotNull String[] notifyIds, long nonce) {
 		final Intent intent = createIntent(context, Action.GET_PURCHASE_INFORMATION);
 		intent.putExtra(EXTRA_NOTIFY_IDS, notifyIds);
 		intent.putExtra(EXTRA_NONCE, nonce);
 		context.startService(intent);
 	}
 
-	public static void requestPurchase(Context context, String itemId, String developerPayload) {
+	public static void requestPurchase(@NotNull Context context, String itemId, String developerPayload) {
 		final Intent intent = createIntent(context, Action.REQUEST_PURCHASE);
 		intent.putExtra(EXTRA_ITEM_ID, itemId);
 		intent.putExtra(EXTRA_DEVELOPER_PAYLOAD, developerPayload);
 		context.startService(intent);
 	}
 
-	public static void restoreTransactions(Context context, long nonce) {
+	public static void restoreTransactions(@NotNull Context context, long nonce) {
 		final Intent intent = createIntent(context, Action.RESTORE_TRANSACTIONS);
 		intent.setClass(context, BillingService.class);
 		intent.putExtra(EXTRA_NONCE, nonce);
 		context.startService(intent);
+	}
+
+	@NotNull
+	private static Intent createIntent(@NotNull Context context, @NotNull Action action) {
+		final Intent result = new Intent(Action.toIntentAction(context, action));
+
+		result.setClass(context, BillingService.class);
+
+		return result;
 	}
 
 	private void bindMarketBillingService() {
@@ -114,41 +100,6 @@ public class BillingService extends Service implements ServiceConnection {
 		} catch (SecurityException e) {
 			Log.e(this.getClass().getSimpleName(), "Could not bind to MarketBillingService", e);
 		}
-	}
-
-	private void checkBillingSupported(int startId) {
-		final String packageName = getPackageName();
-		final CheckBillingSupported request = new CheckBillingSupported(packageName, startId);
-		runRequestOrQueue(request);
-	}
-
-	private void confirmNotifications(Intent intent, int startId) {
-		final String packageName = getPackageName();
-		final String[] notifyIds = intent.getStringArrayExtra(EXTRA_NOTIFY_IDS);
-		final ConfirmNotifications request = new ConfirmNotifications(packageName, startId, notifyIds);
-		runRequestOrQueue(request);
-	}
-
-	@Nullable
-	private Action getActionFromIntent(Intent intent) {
-		final String actionString = intent.getAction();
-		if (actionString == null) {
-			return null;
-		}
-		final String[] split = actionString.split("\\.");
-		if (split.length <= 0) {
-			return null;
-		}
-		return Action.valueOf(split[split.length - 1]);
-	}
-
-	private void getPurchaseInformation(Intent intent, int startId) {
-		final String packageName = getPackageName();
-		final long nonce = intent.getLongExtra(EXTRA_NONCE, 0);
-		final String[] notifyIds = intent.getStringArrayExtra(EXTRA_NOTIFY_IDS);
-		final GetPurchaseInformation request = new GetPurchaseInformation(packageName, startId, notifyIds);
-		request.setNonce(nonce);
-		runRequestOrQueue(request);
 	}
 
 	@Override
@@ -181,43 +132,11 @@ public class BillingService extends Service implements ServiceConnection {
 		return Compatibility.START_NOT_STICKY;
 	}
 
-	private void handleCommand(Intent intent, int startId) {
-		final Action action = getActionFromIntent(intent);
-		if (action == null) {
-			return;
+	private void handleCommand(@NotNull Intent intent, int startId) {
+		final Action action = Action.fromIntentAction(intent);
+		if (action != null) {
+			action.doAction(this, intent, startId);
 		}
-		switch (action) {
-			case CHECK_BILLING_SUPPORTED:
-				checkBillingSupported(startId);
-				break;
-			case REQUEST_PURCHASE:
-				requestPurchase(intent, startId);
-				break;
-			case GET_PURCHASE_INFORMATION:
-				getPurchaseInformation(intent, startId);
-				break;
-			case CONFIRM_NOTIFICATIONS:
-				confirmNotifications(intent, startId);
-				break;
-			case RESTORE_TRANSACTIONS:
-				restoreTransactions(intent, startId);
-		}
-	}
-
-	private void requestPurchase(Intent intent, int startId) {
-		final String packageName = getPackageName();
-		final String itemId = intent.getStringExtra(EXTRA_ITEM_ID);
-		final String developerPayload = intent.getStringExtra(EXTRA_DEVELOPER_PAYLOAD);
-		final RequestPurchase request = new RequestPurchase(packageName, startId, itemId, developerPayload);
-		runRequestOrQueue(request);
-	}
-
-	private void restoreTransactions(Intent intent, int startId) {
-		final String packageName = getPackageName();
-		final long nonce = intent.getLongExtra(EXTRA_NONCE, 0);
-		final RestoreTransactions request = new RestoreTransactions(packageName, startId);
-		request.setNonce(nonce);
-		runRequestOrQueue(request);
 	}
 
 	private void runPendingRequests() {
@@ -250,7 +169,8 @@ public class BillingService extends Service implements ServiceConnection {
 		}
 	}
 
-	private void runRequestOrQueue(BillingRequest request) {
+	@Override
+	public void runRequestOrQueue(@NotNull BillingRequest request) {
 		mPendingRequests.add(request);
 		if (mService == null) {
 			bindMarketBillingService();

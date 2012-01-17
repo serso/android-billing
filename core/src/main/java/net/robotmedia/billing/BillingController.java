@@ -17,6 +17,7 @@ package net.robotmedia.billing;
 
 import java.util.*;
 
+import net.robotmedia.billing.requests.BillingRequest;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -287,7 +288,7 @@ public class BillingController {
 	 * 
 	 * @param supported
 	 */
-	protected static void onBillingChecked(boolean supported) {
+	public static void onBillingChecked(boolean supported) {
 		status = supported ? BillingStatus.SUPPORTED : BillingStatus.UNSUPPORTED;
 		for (IBillingObserver o : observers) {
 			o.onBillingChecked(supported);
@@ -317,7 +318,7 @@ public class BillingController {
 	 * @param purchaseIntent
 	 *            intent to purchase the item.
 	 */
-	protected static void onPurchaseIntent(String itemId, PendingIntent purchaseIntent) {
+	public static void onPurchaseIntent(String itemId, PendingIntent purchaseIntent) {
 		for (IBillingObserver o : observers) {
 			o.onPurchaseIntent(itemId, purchaseIntent);
 		}
@@ -388,7 +389,7 @@ public class BillingController {
 	}
 
 	/**
-	 * Called after a {@link net.robotmedia.billing.BillingRequest} is
+	 * Called after a {@link net.robotmedia.billing.requests.BillingRequest} is
 	 * sent.
 	 * 
 	 * @param requestId
@@ -407,7 +408,7 @@ public class BillingController {
 	}
 
 	/**
-	 * Called after a {@link net.robotmedia.billing.BillingRequest} is
+	 * Called after a {@link net.robotmedia.billing.requests.BillingRequest} is
 	 * sent.
 	 * 
 	 * @param context
@@ -428,7 +429,7 @@ public class BillingController {
 		}
 	}
 
-	protected static void onTransactionsRestored() {
+	public static void onTransactionsRestored() {
 		for (IBillingObserver o : observers) {
 			o.onTransactionsRestored();
 		}
@@ -624,7 +625,7 @@ public class BillingController {
 		}
 	}
 
-	protected static void onRequestPurchaseResponse(String itemId, BillingRequest.ResponseCode response) {
+	public static void onRequestPurchaseResponse(String itemId, BillingRequest.ResponseCode response) {
 		for (IBillingObserver o : observers) {
 			o.onRequestPurchaseResponse(itemId, response);
 		}

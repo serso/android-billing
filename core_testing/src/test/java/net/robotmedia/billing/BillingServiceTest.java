@@ -20,7 +20,7 @@ import android.os.IBinder;
 import android.test.ServiceTestCase;
 import android.test.suitebuilder.annotation.SmallTest;
 
-public class BillingServiceTest extends ServiceTestCase<BillingService> {
+public class BillingServiceTest extends ServiceTestCase<IBillingService> {
 
 	private final static long NONCE = 147;
 	private final static String[] NOTIFY_IDS = new String[] { "test" };

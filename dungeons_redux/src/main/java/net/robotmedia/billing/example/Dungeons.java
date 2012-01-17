@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.robotmedia.billing.BillingController;
-import net.robotmedia.billing.BillingRequest.ResponseCode;
+import net.robotmedia.billing.requests.BillingRequest.ResponseCode;
 import net.robotmedia.billing.example.R;
 import net.robotmedia.billing.example.auxiliary.CatalogAdapter;
 import net.robotmedia.billing.example.auxiliary.CatalogEntry;

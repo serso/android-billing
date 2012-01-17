@@ -15,7 +15,7 @@
 
 package net.robotmedia.billing.model.request;
 
-import net.robotmedia.billing.BillingRequest.ResponseCode;
+import net.robotmedia.billing.requests.BillingRequest.ResponseCode;
 import android.test.AndroidTestCase;
 import android.test.suitebuilder.annotation.SmallTest;
 
@@ -45,8 +45,8 @@ public class ResponseCodeTest extends AndroidTestCase {
 	
 	@SmallTest
 	public void testIsResponseOk() throws Exception {
-		assertTrue(ResponseCode.isResponseOk(0));
-		assertFalse(ResponseCode.isResponseOk(6));
+		assertTrue(ResponseCode.isOk(0));
+		assertFalse(ResponseCode.isOk(6));
 	}
 	
 }

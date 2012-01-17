@@ -19,7 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import net.robotmedia.billing.BillingRequest.ResponseCode;
+import net.robotmedia.billing.requests.BillingRequest.ResponseCode;
 import net.robotmedia.billing.model.BillingDB;
 import net.robotmedia.billing.model.BillingDBTest;
 import net.robotmedia.billing.model.Transaction;

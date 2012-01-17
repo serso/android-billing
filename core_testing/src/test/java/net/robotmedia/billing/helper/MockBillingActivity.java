@@ -15,7 +15,7 @@
 
 package net.robotmedia.billing.helper;
 
-import net.robotmedia.billing.BillingRequest.ResponseCode;
+import net.robotmedia.billing.requests.BillingRequest.ResponseCode;
 import net.robotmedia.billing.model.Transaction.PurchaseState;
 
 public class MockBillingActivity extends AbstractBillingActivity {
