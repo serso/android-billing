@@ -24,7 +24,7 @@ public class RestoreTransactionsRequest extends BillingRequest {
 	@Override public boolean hasNonce() { return true; }
 
 	@Override
-	public void onResponseCode(ResponseCode response) {
+	public void onResponseCode(@NotNull ResponseCode response) {
 		super.onResponseCode(response);
 		if (response == ResponseCode.RESULT_OK) {
 			BillingController.onTransactionsRestored();

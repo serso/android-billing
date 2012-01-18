@@ -17,6 +17,7 @@ package net.robotmedia.billing;
 
 import java.util.*;
 
+import net.robotmedia.billing.helper.AbstractBillingObserver;
 import net.robotmedia.billing.requests.IBillingRequest;
 import net.robotmedia.billing.requests.ResponseCode;
 import org.jetbrains.annotations.NotNull;
@@ -43,7 +44,9 @@ import android.util.Log;
 public class BillingController {
 
 	public static enum BillingStatus {
-		UNKNOWN, SUPPORTED, UNSUPPORTED
+		UNKNOWN,
+		SUPPORTED,
+		UNSUPPORTED
 	}
 
 	/**
@@ -67,23 +70,33 @@ public class BillingController {
 		public String getPublicKey();
 	}
 
+	@NotNull
 	private static BillingStatus status = BillingStatus.UNKNOWN;
 
-	private static Set<String> automaticConfirmations = new HashSet<String>();
 	private static IConfiguration configuration = null;
 	private static boolean debug = false;
+
+	@Nullable
 	private static ISignatureValidator validator = null;
 
 	private static final String JSON_NONCE = "nonce";
 	private static final String JSON_ORDERS = "orders";
-	private static HashMap<String, Set<String>> manualConfirmations = new HashMap<String, Set<String>>();
 
-	private static Set<IBillingObserver> observers = new HashSet<IBillingObserver>();
+
+	// synchronized field
+	@NotNull
+	private static final Set<String> automaticConfirmations = new HashSet<String>();
+
+	// synchronized field
+	@NotNull
+	private static final Map<String, Set<String>> manualConfirmations = new HashMap<String, Set<String>>();
+
+	// synchronized field
+	@NotNull
+	private static final Map<Long, IBillingRequest> pendingRequests = new HashMap<Long, IBillingRequest>();
 
 	public static final String LOG_TAG = "Billing";
 
-	// synchronized field
-	private static final Map<Long, IBillingRequest> pendingRequests = new HashMap<Long, IBillingRequest>();
 
 	/**
 	 * Adds the specified notification to the set of manual confirmations of the
@@ -92,13 +105,15 @@ public class BillingController {
 	 * @param itemId		 id of the item.
 	 * @param notificationId id of the notification.
 	 */
-	private static void addManualConfirmation(String itemId, String notificationId) {
-		Set<String> notifications = manualConfirmations.get(itemId);
-		if (notifications == null) {
-			notifications = new HashSet<String>();
-			manualConfirmations.put(itemId, notifications);
+	private static void addManualConfirmation(@NotNull String itemId, @NotNull String notificationId) {
+		synchronized (manualConfirmations) {
+			Set<String> notifications = manualConfirmations.get(itemId);
+			if (notifications == null) {
+				notifications = new HashSet<String>();
+				manualConfirmations.put(itemId, notifications);
+			}
+			notifications.add(notificationId);
 		}
-		notifications.add(notificationId);
 	}
 
 	/**
@@ -110,7 +125,7 @@ public class BillingController {
 	 * @return the current billing status (unknown, supported or unsupported).
 	 * @see IBillingObserver#onBillingChecked(boolean)
 	 */
-	public static BillingStatus checkBillingSupported(Context context) {
+	public static BillingStatus checkBillingSupported(@NotNull Context context) {
 		if (status == BillingStatus.UNKNOWN) {
 			BillingService.checkBillingSupported(context);
 		}
@@ -125,13 +140,15 @@ public class BillingController {
 	 * @return true if pending notifications for this item were found, false
 	 *         otherwise.
 	 */
-	public static boolean confirmNotifications(Context context, String itemId) {
-		final Set<String> notifications = manualConfirmations.get(itemId);
-		if (notifications != null) {
-			confirmNotifications(context, notifications);
-			return true;
-		} else {
-			return false;
+	public static boolean confirmNotifications(@NotNull Context context, @NotNull String itemId) {
+		synchronized (manualConfirmations) {
+			final Set<String> notifications = manualConfirmations.get(itemId);
+			if (notifications != null) {
+				confirmNotifications(context, notifications);
+				return true;
+			} else {
+				return false;
+			}
 		}
 	}
 
@@ -243,18 +260,6 @@ public class BillingController {
 	}
 
 	/**
-	 * Notifies observers of the purchase state change of the specified item.
-	 *
-	 * @param itemId id of the item whose purchase state has changed.
-	 * @param state  new purchase state of the item.
-	 */
-	private static void notifyPurchaseStateChange(String itemId, Transaction.PurchaseState state) {
-		for (IBillingObserver o : observers) {
-			o.onPurchaseStateChanged(itemId, state);
-		}
-	}
-
-	/**
 	 * Obfuscates the specified purchase. Only the order id, product id and
 	 * developer payload are obfuscated.
 	 *
@@ -281,9 +286,7 @@ public class BillingController {
 	 */
 	public static void onBillingChecked(boolean supported) {
 		status = supported ? BillingStatus.SUPPORTED : BillingStatus.UNSUPPORTED;
-		for (IBillingObserver o : observers) {
-			o.onBillingChecked(supported);
-		}
+		BillingObserverRegistry.onBillingCheckedObservers(supported);
 	}
 
 	/**
@@ -300,20 +303,6 @@ public class BillingController {
 
 	/**
 	 * Called after the response to a
-	 * {@link net.robotmedia.billing.requests.RequestPurchase} request is
-	 * received.
-	 *
-	 * @param itemId		 id of the item whose purchase was requested.
-	 * @param purchaseIntent intent to purchase the item.
-	 */
-	public static void onPurchaseIntent(String itemId, PendingIntent purchaseIntent) {
-		for (IBillingObserver o : observers) {
-			o.onPurchaseIntent(itemId, purchaseIntent);
-		}
-	}
-
-	/**
-	 * Called after the response to a
 	 * {@link net.robotmedia.billing.requests.GetPurchaseInformationRequest} request is
 	 * received. Registers all transactions in local memory and confirms those
 	 * who can be confirmed automatically.
@@ -322,7 +311,7 @@ public class BillingController {
 	 * @param signedData signed JSON data received from the Market Billing service.
 	 * @param signature  data signature.
 	 */
-	protected static void onPurchaseStateChanged(Context context, String signedData, String signature) {
+	protected static void onPurchaseStateChanged(@NotNull Context context, @Nullable String signedData, @Nullable String signature) {
 		debug("Purchase state changed");
 
 		if (TextUtils.isEmpty(signedData)) {
@@ -335,39 +324,49 @@ public class BillingController {
 				Log.w(LOG_TAG, "Empty signature requires debug mode");
 				return;
 			}
-			final ISignatureValidator validator = BillingController.validator != null ? BillingController.validator
-					: new DefaultSignatureValidator(BillingController.configuration);
+
+			final ISignatureValidator validator = getSignatureValidator();
 			if (!validator.validate(signedData, signature)) {
 				Log.w(LOG_TAG, "Signature does not match data.");
 				return;
 			}
 		}
 
-		List<Transaction> purchases;
+		List<Transaction> transactions;
 		try {
-			JSONObject jObject = new JSONObject(signedData);
+			final JSONObject jObject = new JSONObject(signedData);
 			if (!verifyNonce(jObject)) {
 				Log.w(LOG_TAG, "Invalid nonce");
 				return;
 			}
-			purchases = parsePurchases(jObject);
+			transactions = parseTransactions(jObject);
 		} catch (JSONException e) {
 			Log.e(LOG_TAG, "JSON exception: ", e);
 			return;
 		}
 
-		ArrayList<String> confirmations = new ArrayList<String>();
-		for (Transaction p : purchases) {
-			if (p.notificationId != null && automaticConfirmations.contains(p.productId)) {
-				confirmations.add(p.notificationId);
+		final List<String> confirmations = new ArrayList<String>();
+		for (Transaction transaction : transactions) {
+
+			if (transaction.notificationId != null) {
+				synchronized (automaticConfirmations) {
+					if (automaticConfirmations.contains(transaction.productId)) {
+						confirmations.add(transaction.notificationId);
+					} else {
+						// TODO: Discriminate between purchases, cancellations and
+						// refunds.
+						addManualConfirmation(transaction.productId, transaction.notificationId);
+					}
+				}
 			} else {
 				// TODO: Discriminate between purchases, cancellations and
 				// refunds.
-				addManualConfirmation(p.productId, p.notificationId);
+				addManualConfirmation(transaction.productId, transaction.notificationId);
 			}
-			storeTransaction(context, p);
-			notifyPurchaseStateChange(p.productId, p.purchaseState);
+			storeTransaction(context, transaction);
+			BillingObserverRegistry.notifyPurchaseStateChange(transaction.productId, transaction.purchaseState);
 		}
+
 		if (!confirmations.isEmpty()) {
 			final String[] notifyIds = confirmations.toArray(new String[confirmations.size()]);
 			confirmNotifications(context, notifyIds);
@@ -415,12 +414,6 @@ public class BillingController {
 		}
 	}
 
-	public static void onTransactionsRestored() {
-		for (IBillingObserver o : observers) {
-			o.onTransactionsRestored();
-		}
-	}
-
 	/**
 	 * Parse all purchases from the JSON data received from the Market Billing
 	 * service.
@@ -429,8 +422,8 @@ public class BillingController {
 	 * @return list of purchases.
 	 * @throws JSONException if the data couldn't be properly parsed.
 	 */
-	private static List<Transaction> parsePurchases(@NotNull JSONObject data) throws JSONException {
-		List<Transaction> result = new ArrayList<Transaction>();
+	private static List<Transaction> parseTransactions(@NotNull JSONObject data) throws JSONException {
+		final List<Transaction> result = new ArrayList<Transaction>();
 
 		final JSONArray orders = data.optJSONArray(JSON_ORDERS);
 		if (orders != null) {
@@ -444,18 +437,6 @@ public class BillingController {
 	}
 
 	/**
-	 * Registers the specified billing observer.
-	 *
-	 * @param observer the billing observer to add.
-	 * @return true if the observer wasn't previously registered, false
-	 *         otherwise.
-	 * @see #unregisterObserver(IBillingObserver)
-	 */
-	public static boolean registerObserver(IBillingObserver observer) {
-		return observers.add(observer);
-	}
-
-	/**
 	 * Requests the purchase of the specified item. The transaction will not be
 	 * confirmed automatically.
 	 *
@@ -463,7 +444,7 @@ public class BillingController {
 	 * @param itemId  id of the item to be purchased.
 	 * @see #requestPurchase(Context, String, boolean)
 	 */
-	public static void requestPurchase(Context context, String itemId) {
+	public static void requestPurchase(@NotNull Context context, @NotNull String itemId) {
 		requestPurchase(context, itemId, false);
 	}
 
@@ -471,16 +452,18 @@ public class BillingController {
 	 * Requests the purchase of the specified item with optional automatic
 	 * confirmation.
 	 *
-	 * @param context context
-	 * @param itemId  id of the item to be purchased.
-	 * @param confirm if true, the transaction will be confirmed automatically. If
-	 *                false, the transaction will have to be confirmed with a call
-	 *                to {@link #confirmNotifications(Context, String)}.
+	 * @param context		  context
+	 * @param itemId		   id of the item to be purchased.
+	 * @param autoConfirmation if true, the transaction will be confirmed automatically. If
+	 *                         false, the transaction will have to be confirmed with a call
+	 *                         to {@link #confirmNotifications(Context, String)}.
 	 * @see IBillingObserver#onPurchaseIntent(String, PendingIntent)
 	 */
-	public static void requestPurchase(Context context, String itemId, boolean confirm) {
-		if (confirm) {
-			automaticConfirmations.add(itemId);
+	public static void requestPurchase(@NotNull Context context, @NotNull String itemId, boolean autoConfirmation) {
+		if (autoConfirmation) {
+			synchronized (automaticConfirmations) {
+				automaticConfirmations.add(itemId);
+			}
 		}
 		BillingService.requestPurchase(context, itemId, null);
 	}
@@ -526,6 +509,11 @@ public class BillingController {
 		BillingController.validator = validator;
 	}
 
+	@NotNull
+	public static ISignatureValidator getSignatureValidator() {
+		return BillingController.validator != null ? BillingController.validator : new DefaultSignatureValidator(BillingController.configuration);
+	}
+
 	/**
 	 * Starts the specified purchase intent with the specified activity.
 	 *
@@ -569,7 +557,7 @@ public class BillingController {
 	 * @param purchase purchase to unobfuscate.
 	 * @see #obfuscate(Context, Transaction)
 	 */
-	static void unobfuscate(Context context, Transaction purchase) {
+	static void unobfuscate(@NotNull Context context, @NotNull Transaction purchase) {
 		final byte[] salt = getSalt();
 		if (salt == null) {
 			return;
@@ -579,18 +567,7 @@ public class BillingController {
 		purchase.developerPayload = Security.unobfuscate(context, salt, purchase.developerPayload);
 	}
 
-	/**
-	 * Unregisters the specified billing observer.
-	 *
-	 * @param observer the billing observer to unregister.
-	 * @return true if the billing observer was unregistered, false otherwise.
-	 * @see #registerObserver(IBillingObserver)
-	 */
-	public static boolean unregisterObserver(IBillingObserver observer) {
-		return observers.remove(observer);
-	}
-
-	private static boolean verifyNonce(JSONObject data) {
+	private static boolean verifyNonce(@NotNull JSONObject data) {
 		long nonce = data.optLong(JSON_NONCE);
 		if (Security.isNonceKnown(nonce)) {
 			Security.removeNonce(nonce);
@@ -600,10 +577,23 @@ public class BillingController {
 		}
 	}
 
-	public static void onRequestPurchaseResponse(String itemId, ResponseCode response) {
-		for (IBillingObserver o : observers) {
-			o.onRequestPurchaseResponse(itemId, response);
-		}
+	public static void onRequestPurchaseResponse(@NotNull String itemId, @NotNull ResponseCode response) {
+		BillingObserverRegistry.onRequestPurchaseResponse(itemId, response);
 	}
 
+	public static void onPurchaseIntent(@NotNull String itemId, @NotNull PendingIntent purchaseIntent) {
+		BillingObserverRegistry.onPurchaseIntent(itemId, purchaseIntent);
+	}
+
+	public static void onTransactionsRestored() {
+		BillingObserverRegistry.onTransactionsRestored();
+	}
+
+	public static void registerObserver(@NotNull IBillingObserver billingObserver) {
+		BillingObserverRegistry.registerObserver(billingObserver);
+	}
+
+	public static void unregisterObserver(@NotNull IBillingObserver billingObserver) {
+		BillingObserverRegistry.unregisterObserver(billingObserver);
+	}
 }

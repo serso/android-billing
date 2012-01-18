@@ -85,7 +85,7 @@ public abstract class BillingRequest implements IBillingRequest {
 	}
 
 	@Override
-	public void onResponseCode(ResponseCode response) {
+	public void onResponseCode(@NotNull ResponseCode response) {
 		// Do nothing by default
 	}
 

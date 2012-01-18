@@ -23,7 +23,7 @@ public interface IBillingRequest {
 
 	long getNonce();
 
-	void onResponseCode(ResponseCode response);
+	void onResponseCode(@NotNull ResponseCode response);
 
 	int getStartId();
 }

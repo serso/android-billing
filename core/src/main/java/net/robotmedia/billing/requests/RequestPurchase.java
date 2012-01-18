@@ -41,7 +41,7 @@ public class RequestPurchase extends BillingRequest {
 	}
 
 	@Override
-	public void onResponseCode(ResponseCode response) {
+	public void onResponseCode(@NotNull ResponseCode response) {
 		super.onResponseCode(response);
 		BillingController.onRequestPurchaseResponse(itemId, response);
 	}
