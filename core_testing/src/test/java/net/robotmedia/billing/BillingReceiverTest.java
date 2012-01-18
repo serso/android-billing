@@ -32,24 +32,24 @@ public class BillingReceiverTest extends AndroidTestCase {
 
 	@SmallTest
 	public void testNotify() throws Exception {
-		final Intent intent = new Intent(BillingReceiver.ACTION_NOTIFY);
-		intent.putExtra(BillingReceiver.EXTRA_NOTIFICATION_ID, "notificationId");
+		final Intent intent = new Intent(BillingResponseType.IN_APP_NOTIFY.toIntentAction());
+		intent.putExtra(BillingResponseType.EXTRA_NOTIFICATION_ID, "notificationId");
 		mReceiver.onReceive(getContext(), intent);
 	}
 	
 	@SmallTest
 	public void testResponseCode() throws Exception {
-		final Intent intent = new Intent(BillingReceiver.ACTION_RESPONSE_CODE);
-		intent.putExtra(BillingReceiver.EXTRA_REQUEST_ID, "requestId");
-		intent.putExtra(BillingReceiver.EXTRA_RESPONSE_CODE, ResponseCode.RESULT_OK.ordinal());
+		final Intent intent = new Intent(BillingResponseType.RESPONSE_CODE.toIntentAction());
+		intent.putExtra(BillingResponseType.EXTRA_REQUEST_ID, "requestId");
+		intent.putExtra(BillingResponseType.EXTRA_RESPONSE_CODE, ResponseCode.RESULT_OK.ordinal());
 		mReceiver.onReceive(getContext(), intent);
 	}
 	
 	@SmallTest
 	public void testPurchaseStateChanged() throws Exception {
-		final Intent intent = new Intent(BillingReceiver.ACTION_PURCHASE_STATE_CHANGED);
-		intent.putExtra(BillingReceiver.EXTRA_INAPP_SIGNED_DATA, "");
-		intent.putExtra(BillingReceiver.EXTRA_INAPP_SIGNATURE, "");
+		final Intent intent = new Intent(BillingResponseType.PURCHASE_STATE_CHANGED.toIntentAction());
+		intent.putExtra(BillingResponseType.EXTRA_INAPP_SIGNED_DATA, "");
+		intent.putExtra(BillingResponseType.EXTRA_INAPP_SIGNATURE, "");
 		mReceiver.onReceive(getContext(), intent);
 	}
 

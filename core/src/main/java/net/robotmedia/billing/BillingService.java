@@ -15,15 +15,6 @@
 
 package net.robotmedia.billing;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedList;
-
-import net.robotmedia.billing.requests.*;
-import net.robotmedia.billing.utils.Compatibility;
-
-import com.android.vending.billing.IMarketBillingService;
-
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
@@ -32,8 +23,16 @@ import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
+import com.android.vending.billing.IMarketBillingService;
+import net.robotmedia.billing.requests.IBillingRequest;
+import net.robotmedia.billing.utils.Compatibility;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 public class BillingService extends Service implements ServiceConnection, IBillingService {
 
@@ -41,9 +40,9 @@ public class BillingService extends Service implements ServiceConnection, IBilli
 
 	// all operations must be synchronized
 	@NotNull
-	private static final LinkedList<IBillingRequest> pendingRequests = new LinkedList<IBillingRequest>();
+	private static final List<IBillingRequest> pendingRequests = new LinkedList<IBillingRequest>();
 
-	// todo serso: currently not synchronized => make synchronization
+	// todo serso: currently not synchronized => make synchronization or check if synchronization is needed
 	@Nullable
 	private static IMarketBillingService service;
 
@@ -88,7 +87,7 @@ public class BillingService extends Service implements ServiceConnection, IBilli
 
 	@NotNull
 	private static Intent createIntent(@NotNull Context context, @NotNull BillingRequestType action) {
-		final Intent result = new Intent(BillingRequestType.toIntentAction(context, action));
+		final Intent result = new Intent(action.toIntentAction(context));
 
 		result.setClass(context, BillingService.class);
 
@@ -143,13 +142,17 @@ public class BillingService extends Service implements ServiceConnection, IBilli
 		}
 	}
 
-	private void runPendingRequests() {
+	/**
+	 * @return 'true' if all requests (on the moment of start) were processed during current procedure. False is possible only if service was disconnected during processing
+	 */
+	private boolean runPendingRequests() {
 		int maxStartId = -1;
 
 		synchronized (pendingRequests) {
 			for (Iterator<IBillingRequest> it = pendingRequests.iterator(); it.hasNext(); ) {
 				final IBillingRequest request = it.next();
 
+				// if service was disconnected during procedure => connect
 				if (service != null) {
 					runRequest(service, request);
 					it.remove();
@@ -157,14 +160,17 @@ public class BillingService extends Service implements ServiceConnection, IBilli
 					maxStartId = Math.max(maxStartId, request.getStartId());
 				} else {
 					bindMarketBillingService();
-					return;
+					return false;
 				}
 			}
+
 		}
 
 		if (maxStartId >= 0) {
 			stopSelf(maxStartId);
 		}
+
+		return true;
 	}
 
 	private boolean runRequest(@NotNull IMarketBillingService service, @NotNull IBillingRequest request) {

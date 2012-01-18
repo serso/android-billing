@@ -72,8 +72,8 @@ public enum BillingRequestType {
 	protected abstract BillingRequest getBillingRequest(@NotNull String packageName, @NotNull Intent intent, int startId);
 
 	@NotNull
-	static String toIntentAction(@NotNull Context context, @NotNull BillingRequestType action) {
-		return context.getPackageName() + "." + action.name();
+	String toIntentAction(@NotNull Context context) {
+		return context.getPackageName() + "." + this.name();
 	}
 
 	@Nullable

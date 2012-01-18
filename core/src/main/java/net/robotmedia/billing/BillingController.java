@@ -53,7 +53,7 @@ public class BillingController {
 
 		/**
 		 * Returns a salt for the obfuscation of purchases in local memory.
-		 * 
+		 *
 		 * @return array of 20 random bytes.
 		 */
 		public byte[] getObfuscationSalt();
@@ -61,7 +61,7 @@ public class BillingController {
 		/**
 		 * Returns the public key used to verify the signature of responses of
 		 * the Market Billing service.
-		 * 
+		 *
 		 * @return Base64 encoded public key.
 		 */
 		public String getPublicKey();
@@ -82,16 +82,15 @@ public class BillingController {
 
 	public static final String LOG_TAG = "Billing";
 
-	private static HashMap<Long, IBillingRequest> pendingRequests = new HashMap<Long, IBillingRequest>();
+	// synchronized field
+	private static final Map<Long, IBillingRequest> pendingRequests = new HashMap<Long, IBillingRequest>();
 
 	/**
 	 * Adds the specified notification to the set of manual confirmations of the
 	 * specified item.
-	 * 
-	 * @param itemId
-	 *            id of the item.
-	 * @param notificationId
-	 *            id of the notification.
+	 *
+	 * @param itemId		 id of the item.
+	 * @param notificationId id of the notification.
 	 */
 	private static void addManualConfirmation(String itemId, String notificationId) {
 		Set<String> notifications = manualConfirmations.get(itemId);
@@ -106,7 +105,7 @@ public class BillingController {
 	 * Returns the billing status. If it is currently unknown, checks the billing
 	 * status asynchronously, in which case observers will eventually receive
 	 * a {@link IBillingObserver#onBillingChecked(boolean)} notification.
-	 * 
+	 *
 	 * @param context context
 	 * @return the current billing status (unknown, supported or unsupported).
 	 * @see IBillingObserver#onBillingChecked(boolean)
@@ -120,10 +119,9 @@ public class BillingController {
 
 	/**
 	 * Requests to confirm all pending notifications for the specified item.
-	 * 
+	 *
 	 * @param context context
-	 * @param itemId
-	 *            id of the item whose purchase must be confirmed.
+	 * @param itemId  id of the item whose purchase must be confirmed.
 	 * @return true if pending notifications for this item were found, false
 	 *         otherwise.
 	 */
@@ -139,10 +137,9 @@ public class BillingController {
 
 	/**
 	 * Requests to confirm all specified notifications.
-	 * 
-	 * @param context context
-	 * @param notifyIds
-	 *            array with the ids of all the notifications to confirm.
+	 *
+	 * @param context   context
+	 * @param notifyIds array with the ids of all the notifications to confirm.
 	 */
 	private static void confirmNotifications(Context context, String[] notifyIds) {
 		BillingService.confirmNotifications(context, notifyIds);
@@ -157,8 +154,7 @@ public class BillingController {
 	 * cancelled purchases are not subtracted. See
 	 *
 	 * @param context context
-	 * @param itemId
-	 *            id of the item whose purchases will be counted.
+	 * @param itemId  id of the item whose purchases will be counted.
 	 * @return number of purchases for the specified item.
 	 */
 	public static int countPurchases(Context context, String itemId) {
@@ -166,7 +162,7 @@ public class BillingController {
 		itemId = salt != null ? Security.obfuscate(context, salt, itemId) : itemId;
 		return TransactionManager.countPurchases(context, itemId);
 	}
-	
+
 	protected static void debug(String message) {
 		if (debug) {
 			Log.d(LOG_TAG, message);
@@ -178,20 +174,19 @@ public class BillingController {
 	 * followed by a call to
 	 * {@link #onPurchaseStateChanged(Context, String, String)}, if the request
 	 * is successful.
-	 * 
-	 * @param context context
-	 * @param notifyId
-	 *            id of the notification whose purchase information is
-	 *            requested.
+	 *
+	 * @param context  context
+	 * @param notifyId id of the notification whose purchase information is
+	 *                 requested.
 	 */
 	private static void getPurchaseInformation(Context context, String notifyId) {
 		final long nonce = Security.generateNonce();
-		BillingService.getPurchaseInformation(context, new String[] { notifyId }, nonce);
+		BillingService.getPurchaseInformation(context, new String[]{notifyId}, nonce);
 	}
 
 	/**
 	 * Gets the salt from the configuration and logs a warning if it's null.
-	 * 
+	 *
 	 * @return salt.
 	 */
 	@Nullable
@@ -206,7 +201,7 @@ public class BillingController {
 	/**
 	 * Lists all transactions stored locally, including cancellations and
 	 * refunds.
-	 * 
+	 *
 	 * @param context context
 	 * @return list of transactions.
 	 */
@@ -218,10 +213,9 @@ public class BillingController {
 
 	/**
 	 * Lists all transactions of the specified item, stored locally.
-	 * 
+	 *
 	 * @param context context
-	 * @param itemId
-	 *            id of the item whose transactions will be returned.
+	 * @param itemId  id of the item whose transactions will be returned.
 	 * @return list of transactions.
 	 */
 	public static List<Transaction> getTransactions(Context context, String itemId) {
@@ -237,10 +231,9 @@ public class BillingController {
 	 * local memory. Note that if the item was later canceled or refunded this
 	 * will still return true. Also note that the item might have been purchased
 	 * in another installation, but not yet registered in this one.
-	 * 
+	 *
 	 * @param context context
-	 * @param itemId
-	 *            item id.
+	 * @param itemId  item id.
 	 * @return true if the specified item is purchased, false otherwise.
 	 */
 	public static boolean isPurchased(Context context, String itemId) {
@@ -251,11 +244,9 @@ public class BillingController {
 
 	/**
 	 * Notifies observers of the purchase state change of the specified item.
-	 * 
-	 * @param itemId
-	 *            id of the item whose purchase state has changed.
-	 * @param state
-	 *            new purchase state of the item.
+	 *
+	 * @param itemId id of the item whose purchase state has changed.
+	 * @param state  new purchase state of the item.
 	 */
 	private static void notifyPurchaseStateChange(String itemId, Transaction.PurchaseState state) {
 		for (IBillingObserver o : observers) {
@@ -266,10 +257,9 @@ public class BillingController {
 	/**
 	 * Obfuscates the specified purchase. Only the order id, product id and
 	 * developer payload are obfuscated.
-	 * 
-	 * @param context context
-	 * @param purchase
-	 *            purchase to be obfuscated.
+	 *
+	 * @param context  context
+	 * @param purchase purchase to be obfuscated.
 	 * @see #unobfuscate(Context, Transaction)
 	 */
 	static void obfuscate(Context context, Transaction purchase) {
@@ -286,7 +276,7 @@ public class BillingController {
 	 * Called after the response to a
 	 * {@link net.robotmedia.billing.requests.CheckBillingSupportedRequest} request is
 	 * received.
-	 * 
+	 *
 	 * @param supported billing supported
 	 */
 	public static void onBillingChecked(boolean supported) {
@@ -298,10 +288,9 @@ public class BillingController {
 
 	/**
 	 * Called when an IN_APP_NOTIFY message is received.
-	 * 
-	 * @param context context
-	 * @param notifyId
-	 *            notification id.
+	 *
+	 * @param context  context
+	 * @param notifyId notification id.
 	 */
 	protected static void onNotify(Context context, String notifyId) {
 		debug("Notification " + notifyId + " available");
@@ -313,11 +302,9 @@ public class BillingController {
 	 * Called after the response to a
 	 * {@link net.robotmedia.billing.requests.RequestPurchase} request is
 	 * received.
-	 * 
-	 * @param itemId
-	 *            id of the item whose purchase was requested.
-	 * @param purchaseIntent
-	 *            intent to purchase the item.
+	 *
+	 * @param itemId		 id of the item whose purchase was requested.
+	 * @param purchaseIntent intent to purchase the item.
 	 */
 	public static void onPurchaseIntent(String itemId, PendingIntent purchaseIntent) {
 		for (IBillingObserver o : observers) {
@@ -330,12 +317,10 @@ public class BillingController {
 	 * {@link net.robotmedia.billing.requests.GetPurchaseInformationRequest} request is
 	 * received. Registers all transactions in local memory and confirms those
 	 * who can be confirmed automatically.
-	 * 
-	 * @param context context
-	 * @param signedData
-	 *            signed JSON data received from the Market Billing service.
-	 * @param signature
-	 *            data signature.
+	 *
+	 * @param context	context
+	 * @param signedData signed JSON data received from the Market Billing service.
+	 * @param signature  data signature.
 	 */
 	protected static void onPurchaseStateChanged(Context context, String signedData, String signature) {
 		debug("Purchase state changed");
@@ -392,18 +377,19 @@ public class BillingController {
 	/**
 	 * Called after a {@link net.robotmedia.billing.requests.BillingRequest} is
 	 * sent.
-	 * 
-	 * @param requestId
-	 *            the id the request.
-	 * @param request
-	 *            the billing request.
+	 *
+	 * @param requestId the id the request.
+	 * @param request   the billing request.
 	 */
 	protected static void onRequestSent(long requestId, IBillingRequest request) {
 		debug("Request " + requestId + " of type " + request.getRequestType() + " sent");
 
 		if (request.isSuccess()) {
-			pendingRequests.put(requestId, request);
+			synchronized (pendingRequests) {
+				pendingRequests.put(requestId, request);
+			}
 		} else if (request.hasNonce()) {
+			// in case of unsuccessful request with nonce we shall unregister nonce
 			Security.removeNonce(request.getNonce());
 		}
 	}
@@ -411,22 +397,21 @@ public class BillingController {
 	/**
 	 * Called after a {@link net.robotmedia.billing.requests.BillingRequest} is
 	 * sent.
-	 * 
 	 *
-	 * @param requestId
-	 *            the id of the request.
-	 * @param responseCode
-	 *            the response code.
+	 * @param requestId	the id of the request.
+	 * @param responseCode the response code.
 	 * @see net.robotmedia.billing.requests.ResponseCode
 	 */
 	protected static void onResponseCode(long requestId, int responseCode) {
 		final ResponseCode response = ResponseCode.valueOf(responseCode);
 		debug("Request " + requestId + " received response " + response);
 
-		final IBillingRequest request = pendingRequests.get(requestId);
-		if (request != null) {
-			pendingRequests.remove(requestId);
-			request.onResponseCode(response);
+		synchronized (pendingRequests) {
+			final IBillingRequest request = pendingRequests.get(requestId);
+			if (request != null) {
+				pendingRequests.remove(requestId);
+				request.onResponseCode(response);
+			}
 		}
 	}
 
@@ -439,12 +424,10 @@ public class BillingController {
 	/**
 	 * Parse all purchases from the JSON data received from the Market Billing
 	 * service.
-	 * 
-	 * @param data
-	 *            JSON data received from the Market Billing service.
+	 *
+	 * @param data JSON data received from the Market Billing service.
 	 * @return list of purchases.
-	 * @throws JSONException
-	 *             if the data couldn't be properly parsed.
+	 * @throws JSONException if the data couldn't be properly parsed.
 	 */
 	private static List<Transaction> parsePurchases(@NotNull JSONObject data) throws JSONException {
 		List<Transaction> result = new ArrayList<Transaction>();
@@ -462,9 +445,8 @@ public class BillingController {
 
 	/**
 	 * Registers the specified billing observer.
-	 * 
-	 * @param observer
-	 *            the billing observer to add.
+	 *
+	 * @param observer the billing observer to add.
 	 * @return true if the observer wasn't previously registered, false
 	 *         otherwise.
 	 * @see #unregisterObserver(IBillingObserver)
@@ -476,10 +458,9 @@ public class BillingController {
 	/**
 	 * Requests the purchase of the specified item. The transaction will not be
 	 * confirmed automatically.
-	 * 
+	 *
 	 * @param context context
-	 * @param itemId
-	 *            id of the item to be purchased.
+	 * @param itemId  id of the item to be purchased.
 	 * @see #requestPurchase(Context, String, boolean)
 	 */
 	public static void requestPurchase(Context context, String itemId) {
@@ -489,14 +470,12 @@ public class BillingController {
 	/**
 	 * Requests the purchase of the specified item with optional automatic
 	 * confirmation.
-	 * 
+	 *
 	 * @param context context
-	 * @param itemId
-	 *            id of the item to be purchased.
-	 * @param confirm
-	 *            if true, the transaction will be confirmed automatically. If
-	 *            false, the transaction will have to be confirmed with a call
-	 *            to {@link #confirmNotifications(Context, String)}.
+	 * @param itemId  id of the item to be purchased.
+	 * @param confirm if true, the transaction will be confirmed automatically. If
+	 *                false, the transaction will have to be confirmed with a call
+	 *                to {@link #confirmNotifications(Context, String)}.
 	 * @see IBillingObserver#onPurchaseIntent(String, PendingIntent)
 	 */
 	public static void requestPurchase(Context context, String itemId, boolean confirm) {
@@ -508,7 +487,7 @@ public class BillingController {
 
 	/**
 	 * Requests to restore all transactions.
-	 * 
+	 *
 	 * @param context context
 	 */
 	public static void restoreTransactions(Context context) {
@@ -518,9 +497,8 @@ public class BillingController {
 
 	/**
 	 * Sets the configuration instance of the controller.
-	 * 
-	 * @param config
-	 *            configuration instance.
+	 *
+	 * @param config configuration instance.
 	 */
 	public static void setConfiguration(IConfiguration config) {
 		configuration = config;
@@ -528,7 +506,7 @@ public class BillingController {
 
 	/**
 	 * Sets debug mode.
-	 * 
+	 *
 	 * @param debug debug
 	 */
 	public static void setDebug(boolean debug) {
@@ -540,9 +518,8 @@ public class BillingController {
 	 * provided,
 	 * {@link net.robotmedia.billing.security.DefaultSignatureValidator} will
 	 * be used.
-	 * 
-	 * @param validator
-	 *            signature validator instance.
+	 *
+	 * @param validator signature validator instance.
 	 */
 	@SuppressWarnings({"UnusedDeclaration"})
 	public static void setSignatureValidator(ISignatureValidator validator) {
@@ -551,11 +528,10 @@ public class BillingController {
 
 	/**
 	 * Starts the specified purchase intent with the specified activity.
-	 * 
-	 * @param activity activity
-	 * @param purchaseIntent
-	 *            purchase intent.
-	 * @param intent intent
+	 *
+	 * @param activity	   activity
+	 * @param purchaseIntent purchase intent.
+	 * @param intent		 intent
 	 */
 	public static void startPurchaseIntent(Activity activity, PendingIntent purchaseIntent, Intent intent) {
 		if (Compatibility.isStartIntentSenderSupported()) {
@@ -588,10 +564,9 @@ public class BillingController {
 
 	/**
 	 * Unobfuscate the specified purchase.
-	 * 
-	 * @param context context
-	 * @param purchase
-	 *            purchase to unobfuscate.
+	 *
+	 * @param context  context
+	 * @param purchase purchase to unobfuscate.
 	 * @see #obfuscate(Context, Transaction)
 	 */
 	static void unobfuscate(Context context, Transaction purchase) {
@@ -606,9 +581,8 @@ public class BillingController {
 
 	/**
 	 * Unregisters the specified billing observer.
-	 * 
-	 * @param observer
-	 *            the billing observer to unregister.
+	 *
+	 * @param observer the billing observer to unregister.
 	 * @return true if the billing observer was unregistered, false otherwise.
 	 * @see #registerObserver(IBillingObserver)
 	 */

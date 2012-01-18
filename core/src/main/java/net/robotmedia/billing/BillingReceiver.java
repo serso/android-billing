@@ -19,52 +19,21 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
+import org.jetbrains.annotations.NotNull;
 
 public class BillingReceiver extends BroadcastReceiver {
 
-    static final String ACTION_NOTIFY = "com.android.vending.billing.IN_APP_NOTIFY";
-    static final String ACTION_RESPONSE_CODE =
-        "com.android.vending.billing.RESPONSE_CODE";
-    static final String ACTION_PURCHASE_STATE_CHANGED =
-        "com.android.vending.billing.PURCHASE_STATE_CHANGED";
-	
-    static final String EXTRA_NOTIFICATION_ID = "notification_id";
-    static final String EXTRA_INAPP_SIGNED_DATA = "inapp_signed_data";
-    static final String EXTRA_INAPP_SIGNATURE = "inapp_signature";
-    static final String EXTRA_REQUEST_ID = "request_id";
-    static final String EXTRA_RESPONSE_CODE = "response_code";
-    
 	@Override
-    public void onReceive(Context context, Intent intent) {
-        final String action = intent.getAction();
-        BillingController.debug("Received " + action);
-        
-        if (ACTION_PURCHASE_STATE_CHANGED.equals(action)) {
-            purchaseStateChanged(context, intent);
-        } else if (ACTION_NOTIFY.equals(action)) {
-            notify(context, intent);
-        } else if (ACTION_RESPONSE_CODE.equals(action)) {
-        	responseCode(intent);
-        } else {
-            Log.w(this.getClass().getSimpleName(), "Unexpected action: " + action);
-        }
-    }
+	public void onReceive(@NotNull Context context, @NotNull Intent intent) {
+		final String action = intent.getAction();
+		BillingController.debug("Received " + action);
 
-	private void purchaseStateChanged(Context context, Intent intent) {
-        final String signedData = intent.getStringExtra(EXTRA_INAPP_SIGNED_DATA);
-        final String signature = intent.getStringExtra(EXTRA_INAPP_SIGNATURE);
-        BillingController.onPurchaseStateChanged(context, signedData, signature);
+		final BillingResponseType responseType = BillingResponseType.fromIntentAction(intent);
+
+		if (responseType != null) {
+			responseType.doAction(context, intent);
+		} else {
+			Log.w(this.getClass().getSimpleName(), "Unexpected action: " + action);
+		}
 	}
-	
-	private void notify(Context context, Intent intent) {
-        String notifyId = intent.getStringExtra(EXTRA_NOTIFICATION_ID);
-        BillingController.onNotify(context, notifyId);
-	}
-	
-	private void responseCode(Intent intent) {
-        final long requestId = intent.getLongExtra(EXTRA_REQUEST_ID, -1);
-        final int responseCode = intent.getIntExtra(EXTRA_RESPONSE_CODE, 0);
-        BillingController.onResponseCode(requestId, responseCode);
-	}
-	
 }
