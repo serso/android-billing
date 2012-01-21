@@ -73,7 +73,8 @@ public abstract class BillingRequest implements IBillingRequest {
 		return success;
 	}
 
-	protected Bundle makeRequestBundle() {
+	@NotNull
+	private Bundle makeRequestBundle() {
 		final Bundle request = new Bundle();
 		request.putString(KEY_BILLING_REQUEST, getRequestType().name());
 		request.putInt(KEY_API_VERSION, 1);
@@ -89,7 +90,11 @@ public abstract class BillingRequest implements IBillingRequest {
 		// Do nothing by default
 	}
 
-	protected void processOkResponse(Bundle response) {
+	protected void processOkResponse(@NotNull Bundle response) {
+		// Do nothing by default
+	}
+
+	protected void processNotOkResponse(@NotNull Bundle response, @NotNull ResponseCode responseCode) {
 		// Do nothing by default
 	}
 
@@ -103,6 +108,7 @@ public abstract class BillingRequest implements IBillingRequest {
 			processOkResponse(response);
 			return response.getLong(KEY_REQUEST_ID, IGNORE_REQUEST_ID);
 		} else {
+			processNotOkResponse(response, ResponseCode.valueOf(response.getInt(KEY_RESPONSE_CODE)));
 			return IGNORE_REQUEST_ID;
 		}
 	}
@@ -111,7 +117,7 @@ public abstract class BillingRequest implements IBillingRequest {
 		this.nonce = nonce;
 	}
 
-	protected boolean validateResponse(Bundle response) {
+	private boolean validateResponse(@NotNull Bundle response) {
 		final int responseCode = response.getInt(KEY_RESPONSE_CODE);
 		success = ResponseCode.isOk(responseCode);
 		if (!success) {

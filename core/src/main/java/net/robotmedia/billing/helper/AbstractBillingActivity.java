@@ -15,11 +15,13 @@
 
 package net.robotmedia.billing.helper;
 
+import android.widget.Toast;
 import net.robotmedia.billing.BillingController;
 import net.robotmedia.billing.BillingController.BillingStatus;
 import net.robotmedia.billing.requests.ResponseCode;
 import net.robotmedia.billing.model.Transaction.PurchaseState;
 import android.app.Activity;
+import org.jetbrains.annotations.NotNull;
 
 public abstract class AbstractBillingActivity extends Activity implements BillingController.IConfiguration {
 
@@ -52,13 +54,17 @@ public abstract class AbstractBillingActivity extends Activity implements Billin
 			}
 
 			@Override
-			public void onPurchaseStateChanged(String itemId, PurchaseState state) {
-				AbstractBillingActivity.this.onPurchaseStateChanged(itemId, state);
+			public void onPurchaseIntentFailure(@NotNull String productId, @NotNull ResponseCode responseCode) {
 			}
 
 			@Override
-			public void onRequestPurchaseResponse(String itemId, ResponseCode response) {
-				AbstractBillingActivity.this.onRequestPurchaseResponse(itemId, response);
+			public void onPurchaseStateChanged(@NotNull String productId, @NotNull PurchaseState state) {
+				AbstractBillingActivity.this.onPurchaseStateChanged(productId, state);
+			}
+
+			@Override
+			public void onRequestPurchaseResponse(@NotNull String productId, @NotNull ResponseCode response) {
+				AbstractBillingActivity.this.onRequestPurchaseResponse(productId, response);
 			}
 		};
 		BillingController.registerObserver(mBillingObserver);
@@ -80,9 +86,9 @@ public abstract class AbstractBillingActivity extends Activity implements Billin
 		BillingController.setConfiguration(null);
 	}
 
-	public abstract void onPurchaseStateChanged(String itemId, PurchaseState state);;
+	public abstract void onPurchaseStateChanged(String productId, PurchaseState state);;
 
-	public abstract void onRequestPurchaseResponse(String itemId, ResponseCode response);
+	public abstract void onRequestPurchaseResponse(String productId, ResponseCode response);
 
 	/**
 	 * Requests the purchase of the specified item. The transaction will not be
@@ -92,11 +98,11 @@ public abstract class AbstractBillingActivity extends Activity implements Billin
 	 * {@link BillingController#requestPurchase(android.content.Context, String, boolean)}
 	 * instead.
 	 * 
-	 * @param itemId
+	 * @param productId
 	 *            id of the item to be purchased.
 	 */
-	public void requestPurchase(String itemId) {
-		BillingController.requestPurchase(this, itemId);
+	public void requestPurchase(String productId) {
+		BillingController.requestPurchase(this, productId);
 	}
 
 	/**

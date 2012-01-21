@@ -26,6 +26,7 @@ import net.robotmedia.billing.example.auxiliary.CatalogEntry;
 import net.robotmedia.billing.helper.AbstractBillingObserver;
 import net.robotmedia.billing.model.Transaction;
 import net.robotmedia.billing.model.Transaction.PurchaseState;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A sample application based on the original Dungeons to demonstrate how to use
@@ -74,13 +75,13 @@ public class Dungeons extends Activity {
 			}
 
 			@Override
-			public void onPurchaseStateChanged(String itemId, PurchaseState state) {
-				Dungeons.this.onPurchaseStateChanged(itemId, state);
+			public void onPurchaseStateChanged(@NotNull String productId, @NotNull PurchaseState state) {
+				Dungeons.this.onPurchaseStateChanged(productId, state);
 			}
 
 			@Override
-			public void onRequestPurchaseResponse(String itemId, ResponseCode response) {
-				Dungeons.this.onRequestPurchaseResponse(itemId, response);
+			public void onRequestPurchaseResponse(@NotNull String productId, @NotNull ResponseCode response) {
+				Dungeons.this.onRequestPurchaseResponse(productId, response);
 			}
 		};
 		
@@ -108,12 +109,12 @@ public class Dungeons extends Activity {
 		super.onDestroy();
 	}
 
-	public void onPurchaseStateChanged(String itemId, PurchaseState state) {
-		Log.i(TAG, "onPurchaseStateChanged() itemId: " + itemId);
+	public void onPurchaseStateChanged(String productId, PurchaseState state) {
+		Log.i(TAG, "onPurchaseStateChanged() productId: " + productId);
 		updateOwnedItems();
 	}
 
-	public void onRequestPurchaseResponse(String itemId, ResponseCode response) {
+	public void onRequestPurchaseResponse(String productId, ResponseCode response) {
 	}
 
 	/**

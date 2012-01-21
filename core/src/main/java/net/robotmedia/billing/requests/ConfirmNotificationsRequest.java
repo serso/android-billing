@@ -11,11 +11,12 @@ import org.jetbrains.annotations.NotNull;
 */
 public class ConfirmNotificationsRequest extends BillingRequest {
 
-	private String[] notifyIds;
+	@NotNull
+	private final String[] notifyIds;
 
 	private static final String KEY_NOTIFY_IDS = "NOTIFY_IDS";
 
-	public ConfirmNotificationsRequest(String packageName, int startId, String[] notifyIds) {
+	public ConfirmNotificationsRequest(@NotNull String packageName, int startId, @NotNull String[] notifyIds) {
 		super(packageName, startId);
 		this.notifyIds = notifyIds;
 	}

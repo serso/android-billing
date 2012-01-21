@@ -44,9 +44,9 @@ public enum BillingRequestType {
 		@NotNull
 		@Override
 		protected BillingRequest getBillingRequest(@NotNull String packageName, @NotNull Intent intent, int startId) {
-			final String itemId = intent.getStringExtra(EXTRA_ITEM_ID);
+			final String productId = intent.getStringExtra(EXTRA_ITEM_ID);
 			final String developerPayload = intent.getStringExtra(EXTRA_DEVELOPER_PAYLOAD);
-			return new RequestPurchase(packageName, startId, itemId, developerPayload);
+			return new RequestPurchase(packageName, startId, productId, developerPayload);
 		}
 	},
 

@@ -23,7 +23,7 @@ public class CheckBillingSupportedRequest extends BillingRequest {
 	}
 
 	@Override
-	protected void processOkResponse(Bundle response) {
+	protected void processOkResponse(@NotNull Bundle response) {
 		final boolean supported = this.isSuccess();
 		BillingController.onBillingChecked(supported);
 	}

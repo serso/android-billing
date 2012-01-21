@@ -39,12 +39,12 @@ public class MockBillingActivity extends AbstractBillingActivity {
 	}
 
 	@Override
-	public void onRequestPurchaseResponse(String itemId, ResponseCode response) {
+	public void onRequestPurchaseResponse(String productId, ResponseCode response) {
 		// TODO Auto-generated method stub
 	}
 
 	@Override
-	public void onPurchaseStateChanged(String itemId, PurchaseState state) {
+	public void onPurchaseStateChanged(String productId, PurchaseState state) {
 		// TODO Auto-generated method stub
 	}
 

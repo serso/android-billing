@@ -15,20 +15,21 @@
 
 package net.robotmedia.billing;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import net.robotmedia.billing.requests.ResponseCode;
-import net.robotmedia.billing.model.BillingDB;
-import net.robotmedia.billing.model.BillingDBTest;
-import net.robotmedia.billing.model.Transaction;
-import net.robotmedia.billing.model.TransactionTest;
-import net.robotmedia.billing.model.Transaction.PurchaseState;
 import android.app.PendingIntent;
 import android.test.AndroidTestCase;
 import android.test.suitebuilder.annotation.MediumTest;
 import android.test.suitebuilder.annotation.SmallTest;
+import net.robotmedia.billing.model.BillingDB;
+import net.robotmedia.billing.model.BillingDBTest;
+import net.robotmedia.billing.model.Transaction;
+import net.robotmedia.billing.model.Transaction.PurchaseState;
+import net.robotmedia.billing.model.TransactionTest;
+import net.robotmedia.billing.requests.ResponseCode;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class BillingControllerTest extends AndroidTestCase {
 
@@ -97,10 +98,13 @@ public class BillingControllerTest extends AndroidTestCase {
 			public void onTransactionsRestored() {
 				flags.add(true);
 			}
-			public void onPurchaseIntent(String itemId, PendingIntent purchaseIntent) {}
+			public void onPurchaseIntent(@NotNull String productId, @NotNull PendingIntent purchaseIntent) {}
+
+			@Override
+			public void onPurchaseIntentFailure(@NotNull String productId, @NotNull ResponseCode responseCode) {}
 			public void onBillingChecked(boolean supported) {}
-			public void onRequestPurchaseResponse(String itemId, ResponseCode response) {}
-			public void onPurchaseStateChanged(String itemId, PurchaseState state) {}
+			public void onRequestPurchaseResponse(@NotNull String productId, @NotNull ResponseCode response) {}
+			public void onPurchaseStateChanged(@NotNull String productId, @NotNull PurchaseState state) {}
 		};
 		BillingController.registerObserver(observer);
 		BillingController.onTransactionsRestored();
@@ -116,15 +120,19 @@ public class BillingControllerTest extends AndroidTestCase {
 		final IBillingObserver observer = new IBillingObserver() {
 			
 			public void onTransactionsRestored() {}
-			public void onPurchaseIntent(String itemId, PendingIntent purchaseIntent) {}
+			public void onPurchaseIntent(@NotNull String productId, @NotNull PendingIntent purchaseIntent) {}
+
+			@Override
+			public void onPurchaseIntentFailure(@NotNull String productId, @NotNull ResponseCode responseCode) {}
+
 			public void onBillingChecked(boolean supported) {}
-			public void onRequestPurchaseResponse(String itemId, ResponseCode response) {
+			public void onRequestPurchaseResponse(@NotNull String productId, @NotNull ResponseCode response) {
 				flags.add(true);
-				assertEquals(testItemId, itemId);
+				assertEquals(testItemId, productId);
 				assertEquals(testResponse, response);
 			}
 			@Override
-			public void onPurchaseStateChanged(String itemId, PurchaseState state) {}
+			public void onPurchaseStateChanged(@NotNull String productId, @NotNull PurchaseState state) {}
 		};
 		BillingController.registerObserver(observer);
 		BillingController.onRequestPurchaseResponse(testItemId, testResponse);

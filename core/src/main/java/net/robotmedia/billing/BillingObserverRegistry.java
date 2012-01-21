@@ -32,12 +32,12 @@ class BillingObserverRegistry {
 	 * {@link net.robotmedia.billing.requests.RequestPurchase} request is
 	 * received.
 	 *
-	 * @param itemId		 id of the item whose purchase was requested.
+	 * @param productId		 id of the item whose purchase was requested.
 	 * @param purchaseIntent intent to purchase the item.
 	 */
-	static void onPurchaseIntent(@NotNull String itemId, @NotNull PendingIntent purchaseIntent) {
+	static void onPurchaseIntent(@NotNull String productId, @NotNull PendingIntent purchaseIntent) {
 		for (IBillingObserver o : getSynchronizedObservers()) {
-			o.onPurchaseIntent(itemId, purchaseIntent);
+			o.onPurchaseIntent(productId, purchaseIntent);
 		}
 	}
 
@@ -77,12 +77,12 @@ class BillingObserverRegistry {
 	/**
 	 * Notifies observers of the purchase state change of the specified item.
 	 *
-	 * @param itemId id of the item whose purchase state has changed.
+	 * @param productId id of the item whose purchase state has changed.
 	 * @param state  new purchase state of the item.
 	 */
-	static void notifyPurchaseStateChange(@NotNull String itemId, @NotNull Transaction.PurchaseState state) {
+	static void notifyPurchaseStateChange(@NotNull String productId, @NotNull Transaction.PurchaseState state) {
 		for (IBillingObserver o : getSynchronizedObservers()) {
-			o.onPurchaseStateChanged(itemId, state);
+			o.onPurchaseStateChanged(productId, state);
 		}
 	}
 
@@ -96,9 +96,15 @@ class BillingObserverRegistry {
 		return result;
 	}
 
-	static void onRequestPurchaseResponse(@NotNull String itemId, @NotNull ResponseCode response) {
+	static void onRequestPurchaseResponse(@NotNull String productId, @NotNull ResponseCode response) {
 		for (IBillingObserver o : getSynchronizedObservers()) {
-			o.onRequestPurchaseResponse(itemId, response);
+			o.onRequestPurchaseResponse(productId, response);
+		}
+	}
+
+	public static void onPurchaseIntentFailure(@NotNull String productId, @NotNull ResponseCode responseCode) {
+		for (IBillingObserver o : getSynchronizedObservers()) {
+			o.onPurchaseIntentFailure(productId, responseCode);
 		}
 	}
 }

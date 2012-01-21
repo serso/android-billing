@@ -15,26 +15,41 @@
 
 package net.robotmedia.billing.model;
 
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 public class Transaction {
 
-    public enum PurchaseState {
-        // Responses to requestPurchase or restoreTransactions.
-    	PURCHASED,    // 0: User was charged for the order.
-        CANCELLED,   // 1: The charge failed on the server.
-    	REFUNDED;    // 2: User received a refund for the order.
+	public static enum PurchaseState {
+		// Responses to requestPurchase or restoreTransactions.
 
-        // Converts from an ordinal value to the PurchaseState
-        public static PurchaseState valueOf(int index) {
-            PurchaseState[] values = PurchaseState.values();
-            if (index < 0 || index >= values.length) {
-                return CANCELLED;
-            }
-            return values[index];
-        }
-    }
+		// 0: User was charged for the order.
+		PURCHASED(0),
+
+		// 1: The charge failed on the server.
+		CANCELLED(1),
+
+		// 2: User received a refund for the order.
+		REFUNDED(2);
+
+
+		private final int id;
+
+		PurchaseState(int id) {
+			this.id = id;
+		}
+
+		public static PurchaseState valueOf(int id) {
+			for (PurchaseState purchaseState : values()) {
+				if ( purchaseState.id == id ) {
+					return purchaseState;
+				}
+			}
+			return CANCELLED;
+		}
+	}
+
 	static final String DEVELOPER_PAYLOAD = "developerPayload";
 	static final String NOTIFICATION_ID = "notificationId";
 	static final String ORDER_ID = "orderId";
@@ -43,32 +58,35 @@ public class Transaction {
 	static final String PURCHASE_STATE = "purchaseState";
 
 	static final String PURCHASE_TIME = "purchaseTime";
-	
-    public static Transaction parse(JSONObject json) throws JSONException {
-    	final Transaction transaction = new Transaction();
-        final int response = json.getInt(PURCHASE_STATE);
-        transaction.purchaseState = PurchaseState.valueOf(response);
-        transaction.productId = json.getString(PRODUCT_ID);
-        transaction.packageName = json.getString(PACKAGE_NAME);
-        transaction.purchaseTime = json.getLong(PURCHASE_TIME);
-        transaction.orderId = json.optString(ORDER_ID, null);
-        transaction.notificationId = json.optString(NOTIFICATION_ID, null);
-        transaction.developerPayload = json.optString(DEVELOPER_PAYLOAD, null);
-        return transaction;
-    }
+
+	public static Transaction parse(@NotNull JSONObject json) throws JSONException {
+		final Transaction transaction = new Transaction();
+
+		final int response = json.getInt(PURCHASE_STATE);
+		transaction.purchaseState = PurchaseState.valueOf(response);
+		transaction.productId = json.getString(PRODUCT_ID);
+		transaction.packageName = json.getString(PACKAGE_NAME);
+		transaction.purchaseTime = json.getLong(PURCHASE_TIME);
+		transaction.orderId = json.optString(ORDER_ID, null);
+		transaction.notificationId = json.optString(NOTIFICATION_ID, null);
+		transaction.developerPayload = json.optString(DEVELOPER_PAYLOAD, null);
+
+		return transaction;
+	}
 
 	public String developerPayload;
-    public String notificationId;
-    public String orderId;
-    public String packageName;
-    public String productId;
-    public PurchaseState purchaseState;
-    public long purchaseTime;
-    
-    public Transaction() {}
-    
-    public Transaction(String orderId, String productId, String packageName, PurchaseState purchaseState,
-			String notificationId, long purchaseTime, String developerPayload) {
+	public String notificationId;
+	public String orderId;
+	public String packageName;
+	public String productId;
+	public PurchaseState purchaseState;
+	public long purchaseTime;
+
+	public Transaction() {
+	}
+
+	public Transaction(String orderId, String productId, String packageName, PurchaseState purchaseState,
+					   String notificationId, long purchaseTime, String developerPayload) {
 		this.orderId = orderId;
 		this.productId = productId;
 		this.packageName = packageName;
@@ -77,55 +95,57 @@ public class Transaction {
 		this.purchaseTime = purchaseTime;
 		this.developerPayload = developerPayload;
 	}
-    
+
+	@NotNull
 	public Transaction clone() {
-		return new Transaction(orderId, productId, packageName, purchaseState, notificationId, purchaseTime, developerPayload);
+		Transaction clone;
+
+		try {
+			//noinspection UnusedAssignment
+			clone = (Transaction) super.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new AssertionError(e);
+		}
+
+		return clone;
+	}
+
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		Transaction that = (Transaction) o;
+
+		if (purchaseTime != that.purchaseTime) return false;
+		if (developerPayload != null ? !developerPayload.equals(that.developerPayload) : that.developerPayload != null)
+			return false;
+		if (notificationId != null ? !notificationId.equals(that.notificationId) : that.notificationId != null)
+			return false;
+		if (orderId != null ? !orderId.equals(that.orderId) : that.orderId != null) return false;
+		if (packageName != null ? !packageName.equals(that.packageName) : that.packageName != null) return false;
+		if (productId != null ? !productId.equals(that.productId) : that.productId != null) return false;
+		if (purchaseState != that.purchaseState) return false;
+
+		return true;
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		Transaction other = (Transaction) obj;
-		if (developerPayload == null) {
-			if (other.developerPayload != null)
-				return false;
-		} else if (!developerPayload.equals(other.developerPayload))
-			return false;
-		if (notificationId == null) {
-			if (other.notificationId != null)
-				return false;
-		} else if (!notificationId.equals(other.notificationId))
-			return false;
-		if (orderId == null) {
-			if (other.orderId != null)
-				return false;
-		} else if (!orderId.equals(other.orderId))
-			return false;
-		if (packageName == null) {
-			if (other.packageName != null)
-				return false;
-		} else if (!packageName.equals(other.packageName))
-			return false;
-		if (productId == null) {
-			if (other.productId != null)
-				return false;
-		} else if (!productId.equals(other.productId))
-			return false;
-		if (purchaseState != other.purchaseState)
-			return false;
-		if (purchaseTime != other.purchaseTime)
-			return false;
-		return true;
+	public int hashCode() {
+		int result = developerPayload != null ? developerPayload.hashCode() : 0;
+		result = 31 * result + (notificationId != null ? notificationId.hashCode() : 0);
+		result = 31 * result + (orderId != null ? orderId.hashCode() : 0);
+		result = 31 * result + (packageName != null ? packageName.hashCode() : 0);
+		result = 31 * result + (productId != null ? productId.hashCode() : 0);
+		result = 31 * result + (purchaseState != null ? purchaseState.hashCode() : 0);
+		result = 31 * result + (int) (purchaseTime ^ (purchaseTime >>> 32));
+		return result;
 	}
-	
+
 	@Override
 	public String toString() {
 		return String.valueOf(orderId);
 	}
-    
+
 }

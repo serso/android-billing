@@ -18,6 +18,7 @@ package net.robotmedia.billing;
 import net.robotmedia.billing.requests.ResponseCode;
 import net.robotmedia.billing.model.Transaction.PurchaseState;
 import android.app.PendingIntent;
+import org.jetbrains.annotations.NotNull;
 
 public interface IBillingObserver {
 
@@ -32,35 +33,42 @@ public interface IBillingObserver {
 	/**
 	 * Called after requesting the purchase of the specified item.
 	 *
-	 * @param itemId		 id of the item whose purchase was requested.
+	 * @param productId		 id of the item whose purchase was requested.
 	 * @param purchaseIntent a purchase pending intent for the specified item.
 	 * @see BillingController#requestPurchase(android.content.Context, String,
 	 *	  boolean)
 	 */
-	public void onPurchaseIntent(String itemId, PendingIntent purchaseIntent);
+	public void onPurchaseIntent(@NotNull String productId, @NotNull PendingIntent purchaseIntent);
+
+	/**
+	 * Called when purchase intent was not sent due to billing service error
+	 *
+	 * @param productId id of the item whose purchase was requested
+	 * @param responseCode one of the failures response codes from billing service
+	 */
+	void onPurchaseIntentFailure(@NotNull String productId, @NotNull ResponseCode responseCode);
 
 	/**
 	 * Called when the specified item is purchased, cancelled or refunded.
 	 *
-	 * @param itemId id of the item whose purchase state has changed.
+	 * @param productId id of the item whose purchase state has changed.
 	 * @param state  purchase state of the specified item.
 	 */
-	public void onPurchaseStateChanged(String itemId, PurchaseState state);
+	public void onPurchaseStateChanged(@NotNull String productId, @NotNull PurchaseState state);
 
 	/**
 	 * Called with the response for the purchase request of the specified item.
 	 * This is used for reporting various errors, or if the user backed out and
 	 * didn't purchase the item.
 	 *
-	 * @param itemId   id of the item whose purchase was requested
+	 * @param productId   id of the item whose purchase was requested
 	 * @param response response of the purchase request
 	 */
-	public void onRequestPurchaseResponse(String itemId, ResponseCode response);
+	public void onRequestPurchaseResponse(@NotNull String productId, @NotNull ResponseCode response);
 
 	/**
 	 * Called when a restore transactions request has been successfully
 	 * received by the server.
 	 */
 	public void onTransactionsRestored();
-
 }

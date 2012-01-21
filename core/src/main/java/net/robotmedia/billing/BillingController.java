@@ -15,24 +15,6 @@
 
 package net.robotmedia.billing;
 
-import java.util.*;
-
-import net.robotmedia.billing.helper.AbstractBillingObserver;
-import net.robotmedia.billing.requests.IBillingRequest;
-import net.robotmedia.billing.requests.ResponseCode;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import net.robotmedia.billing.model.Transaction;
-import net.robotmedia.billing.model.TransactionManager;
-import net.robotmedia.billing.security.DefaultSignatureValidator;
-import net.robotmedia.billing.security.ISignatureValidator;
-import net.robotmedia.billing.utils.Compatibility;
-import net.robotmedia.billing.utils.Security;
-
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.app.PendingIntent.CanceledException;
@@ -40,6 +22,22 @@ import android.content.Context;
 import android.content.Intent;
 import android.text.TextUtils;
 import android.util.Log;
+import net.robotmedia.billing.model.Transaction;
+import net.robotmedia.billing.model.TransactionManager;
+import net.robotmedia.billing.requests.IBillingRequest;
+import net.robotmedia.billing.requests.ResponseCode;
+import net.robotmedia.billing.security.DefaultSignatureValidator;
+import net.robotmedia.billing.security.ISignatureValidator;
+import net.robotmedia.billing.utils.Compatibility;
+import net.robotmedia.billing.utils.ObfuscateUtils;
+import net.robotmedia.billing.utils.Security;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.*;
 
 public class BillingController {
 
@@ -52,7 +50,7 @@ public class BillingController {
 	/**
 	 * Used to provide on-demand values to the billing controller.
 	 */
-	public interface IConfiguration {
+	public static interface IConfiguration {
 
 		/**
 		 * Returns a salt for the obfuscation of purchases in local memory.
@@ -70,6 +68,11 @@ public class BillingController {
 		public String getPublicKey();
 	}
 
+	private static final String JSON_NONCE = "nonce";
+	private static final String JSON_ORDERS = "orders";
+
+	public static final String LOG_TAG = "Billing";
+
 	@NotNull
 	private static BillingStatus status = BillingStatus.UNKNOWN;
 
@@ -79,14 +82,13 @@ public class BillingController {
 	@Nullable
 	private static ISignatureValidator validator = null;
 
-	private static final String JSON_NONCE = "nonce";
-	private static final String JSON_ORDERS = "orders";
-
-
+	// todo serso: we only queue to this list and never remove (probably we should do it inside net.robotmedia.billing.BillingController.onPurchaseStateChanged )
 	// synchronized field
+	// value: product id with automatic confirmation
 	@NotNull
 	private static final Set<String> automaticConfirmations = new HashSet<String>();
 
+	// todo serso: we only queue to this list and never remove (probably we should do it inside net.robotmedia.billing.BillingController.confirmNotifications )
 	// synchronized field
 	@NotNull
 	private static final Map<String, Set<String>> manualConfirmations = new HashMap<String, Set<String>>();
@@ -95,22 +97,19 @@ public class BillingController {
 	@NotNull
 	private static final Map<Long, IBillingRequest> pendingRequests = new HashMap<Long, IBillingRequest>();
 
-	public static final String LOG_TAG = "Billing";
-
-
 	/**
 	 * Adds the specified notification to the set of manual confirmations of the
 	 * specified item.
 	 *
-	 * @param itemId		 id of the item.
+	 * @param productId		 id of the item.
 	 * @param notificationId id of the notification.
 	 */
-	private static void addManualConfirmation(@NotNull String itemId, @NotNull String notificationId) {
+	private static void addManualConfirmation(@NotNull String productId, @NotNull String notificationId) {
 		synchronized (manualConfirmations) {
-			Set<String> notifications = manualConfirmations.get(itemId);
+			Set<String> notifications = manualConfirmations.get(productId);
 			if (notifications == null) {
 				notifications = new HashSet<String>();
-				manualConfirmations.put(itemId, notifications);
+				manualConfirmations.put(productId, notifications);
 			}
 			notifications.add(notificationId);
 		}
@@ -136,13 +135,13 @@ public class BillingController {
 	 * Requests to confirm all pending notifications for the specified item.
 	 *
 	 * @param context context
-	 * @param itemId  id of the item whose purchase must be confirmed.
+	 * @param productId  id of the item whose purchase must be confirmed.
 	 * @return true if pending notifications for this item were found, false
 	 *         otherwise.
 	 */
-	public static boolean confirmNotifications(@NotNull Context context, @NotNull String itemId) {
+	public static boolean confirmNotifications(@NotNull Context context, @NotNull String productId) {
 		synchronized (manualConfirmations) {
-			final Set<String> notifications = manualConfirmations.get(itemId);
+			final Set<String> notifications = manualConfirmations.get(productId);
 			if (notifications != null) {
 				confirmNotifications(context, notifications);
 				return true;
@@ -158,7 +157,7 @@ public class BillingController {
 	 * @param context   context
 	 * @param notifyIds array with the ids of all the notifications to confirm.
 	 */
-	private static void confirmNotifications(Context context, String[] notifyIds) {
+	private static void confirmNotifications(@NotNull Context context, @NotNull String[] notifyIds) {
 		BillingService.confirmNotifications(context, notifyIds);
 	}
 
@@ -171,13 +170,16 @@ public class BillingController {
 	 * cancelled purchases are not subtracted. See
 	 *
 	 * @param context context
-	 * @param itemId  id of the item whose purchases will be counted.
+	 * @param productId  id of the item whose purchases will be counted.
 	 * @return number of purchases for the specified item.
 	 */
-	public static int countPurchases(Context context, String itemId) {
+	public static int countPurchases(@NotNull Context context, @NotNull String productId) {
 		final byte[] salt = getSalt();
-		itemId = salt != null ? Security.obfuscate(context, salt, itemId) : itemId;
-		return TransactionManager.countPurchases(context, itemId);
+		final String obfuscatedItemId = Security.obfuscate(context, salt, productId);
+
+		// item id != null => obfuscatedItemId != null
+		assert obfuscatedItemId != null;
+		return TransactionManager.countPurchases(context, obfuscatedItemId);
 	}
 
 	protected static void debug(String message) {
@@ -196,7 +198,7 @@ public class BillingController {
 	 * @param notifyId id of the notification whose purchase information is
 	 *                 requested.
 	 */
-	private static void getPurchaseInformation(Context context, String notifyId) {
+	private static void getPurchaseInformation(@NotNull Context context, @NotNull String notifyId) {
 		final long nonce = Security.generateNonce();
 		BillingService.getPurchaseInformation(context, new String[]{notifyId}, nonce);
 	}
@@ -222,9 +224,10 @@ public class BillingController {
 	 * @param context context
 	 * @return list of transactions.
 	 */
-	public static List<Transaction> getTransactions(Context context) {
-		List<Transaction> transactions = TransactionManager.getTransactions(context);
-		unobfuscate(context, transactions);
+	@NotNull
+	public static List<Transaction> getTransactions(@NotNull Context context) {
+		final List<Transaction> transactions = TransactionManager.getTransactions(context);
+		ObfuscateUtils.unobfuscate(context, transactions, getSalt());
 		return transactions;
 	}
 
@@ -232,14 +235,18 @@ public class BillingController {
 	 * Lists all transactions of the specified item, stored locally.
 	 *
 	 * @param context context
-	 * @param itemId  id of the item whose transactions will be returned.
+	 * @param productId  id of the item whose transactions will be returned.
 	 * @return list of transactions.
 	 */
-	public static List<Transaction> getTransactions(Context context, String itemId) {
-		final byte[] salt = getSalt();
-		itemId = salt != null ? Security.obfuscate(context, salt, itemId) : itemId;
-		List<Transaction> transactions = TransactionManager.getTransactions(context, itemId);
-		unobfuscate(context, transactions);
+	@NotNull
+	public static List<Transaction> getTransactions(@NotNull Context context, @NotNull String productId) {
+		byte[] salt = getSalt();
+
+		final String obfuscatedItemId = Security.obfuscate(context, salt, productId);
+
+		assert obfuscatedItemId != null;
+		final List<Transaction> transactions = TransactionManager.getTransactions(context, obfuscatedItemId);
+		ObfuscateUtils.unobfuscate(context, transactions, salt);
 		return transactions;
 	}
 
@@ -250,31 +257,15 @@ public class BillingController {
 	 * in another installation, but not yet registered in this one.
 	 *
 	 * @param context context
-	 * @param itemId  item id.
+	 * @param productId  item id.
 	 * @return true if the specified item is purchased, false otherwise.
 	 */
-	public static boolean isPurchased(Context context, String itemId) {
+	public static boolean isPurchased(@NotNull Context context, @NotNull String productId) {
 		final byte[] salt = getSalt();
-		itemId = salt != null ? Security.obfuscate(context, salt, itemId) : itemId;
-		return TransactionManager.isPurchased(context, itemId);
-	}
+		final String obfuscatedItemId = Security.obfuscate(context, salt, productId);
 
-	/**
-	 * Obfuscates the specified purchase. Only the order id, product id and
-	 * developer payload are obfuscated.
-	 *
-	 * @param context  context
-	 * @param purchase purchase to be obfuscated.
-	 * @see #unobfuscate(Context, Transaction)
-	 */
-	static void obfuscate(Context context, Transaction purchase) {
-		final byte[] salt = getSalt();
-		if (salt == null) {
-			return;
-		}
-		purchase.orderId = Security.obfuscate(context, salt, purchase.orderId);
-		purchase.productId = Security.obfuscate(context, salt, purchase.productId);
-		purchase.developerPayload = Security.obfuscate(context, salt, purchase.developerPayload);
+		assert obfuscatedItemId != null;
+		return TransactionManager.isPurchased(context, obfuscatedItemId);
 	}
 
 	/**
@@ -353,16 +344,15 @@ public class BillingController {
 					if (automaticConfirmations.contains(transaction.productId)) {
 						confirmations.add(transaction.notificationId);
 					} else {
-						// TODO: Discriminate between purchases, cancellations and
-						// refunds.
+						// TODO: Discriminate between purchases, cancellations and refunds.
 						addManualConfirmation(transaction.productId, transaction.notificationId);
 					}
 				}
 			} else {
-				// TODO: Discriminate between purchases, cancellations and
-				// refunds.
+				// TODO: Discriminate between purchases, cancellations and refunds.
 				addManualConfirmation(transaction.productId, transaction.notificationId);
 			}
+
 			storeTransaction(context, transaction);
 			BillingObserverRegistry.notifyPurchaseStateChange(transaction.productId, transaction.purchaseState);
 		}
@@ -380,7 +370,7 @@ public class BillingController {
 	 * @param requestId the id the request.
 	 * @param request   the billing request.
 	 */
-	protected static void onRequestSent(long requestId, IBillingRequest request) {
+	protected static void onRequestSent(long requestId, @NotNull IBillingRequest request) {
 		debug("Request " + requestId + " of type " + request.getRequestType() + " sent");
 
 		if (request.isSuccess()) {
@@ -422,6 +412,7 @@ public class BillingController {
 	 * @return list of purchases.
 	 * @throws JSONException if the data couldn't be properly parsed.
 	 */
+	@NotNull
 	private static List<Transaction> parseTransactions(@NotNull JSONObject data) throws JSONException {
 		final List<Transaction> result = new ArrayList<Transaction>();
 
@@ -441,11 +432,11 @@ public class BillingController {
 	 * confirmed automatically.
 	 *
 	 * @param context context
-	 * @param itemId  id of the item to be purchased.
+	 * @param productId  id of the item to be purchased.
 	 * @see #requestPurchase(Context, String, boolean)
 	 */
-	public static void requestPurchase(@NotNull Context context, @NotNull String itemId) {
-		requestPurchase(context, itemId, false);
+	public static void requestPurchase(@NotNull Context context, @NotNull String productId) {
+		requestPurchase(context, productId, false);
 	}
 
 	/**
@@ -453,19 +444,22 @@ public class BillingController {
 	 * confirmation.
 	 *
 	 * @param context		  context
-	 * @param itemId		   id of the item to be purchased.
+	 * @param productId		   id of the item to be purchased.
 	 * @param autoConfirmation if true, the transaction will be confirmed automatically. If
 	 *                         false, the transaction will have to be confirmed with a call
 	 *                         to {@link #confirmNotifications(Context, String)}.
 	 * @see IBillingObserver#onPurchaseIntent(String, PendingIntent)
 	 */
-	public static void requestPurchase(@NotNull Context context, @NotNull String itemId, boolean autoConfirmation) {
+	public static void requestPurchase(@NotNull Context context,
+									   @NotNull String productId,
+									   boolean autoConfirmation) {
 		if (autoConfirmation) {
 			synchronized (automaticConfirmations) {
-				automaticConfirmations.add(itemId);
+				automaticConfirmations.add(productId);
 			}
 		}
-		BillingService.requestPurchase(context, itemId, null);
+
+		BillingService.requestPurchase(context, productId, null);
 	}
 
 	/**
@@ -538,33 +532,10 @@ public class BillingController {
 		}
 	}
 
-	static void storeTransaction(Context context, Transaction t) {
-		final Transaction t2 = t.clone();
-		obfuscate(context, t2);
-		TransactionManager.addTransaction(context, t2);
-	}
-
-	static void unobfuscate(Context context, List<Transaction> transactions) {
-		for (Transaction p : transactions) {
-			unobfuscate(context, p);
-		}
-	}
-
-	/**
-	 * Unobfuscate the specified purchase.
-	 *
-	 * @param context  context
-	 * @param purchase purchase to unobfuscate.
-	 * @see #obfuscate(Context, Transaction)
-	 */
-	static void unobfuscate(@NotNull Context context, @NotNull Transaction purchase) {
-		final byte[] salt = getSalt();
-		if (salt == null) {
-			return;
-		}
-		purchase.orderId = Security.unobfuscate(context, salt, purchase.orderId);
-		purchase.productId = Security.unobfuscate(context, salt, purchase.productId);
-		purchase.developerPayload = Security.unobfuscate(context, salt, purchase.developerPayload);
+	static void storeTransaction(@NotNull Context context, @NotNull Transaction t) {
+		final Transaction clone = t.clone();
+		ObfuscateUtils.obfuscate(context, clone, getSalt());
+		TransactionManager.addTransaction(context, clone);
 	}
 
 	private static boolean verifyNonce(@NotNull JSONObject data) {
@@ -577,12 +548,16 @@ public class BillingController {
 		}
 	}
 
-	public static void onRequestPurchaseResponse(@NotNull String itemId, @NotNull ResponseCode response) {
-		BillingObserverRegistry.onRequestPurchaseResponse(itemId, response);
+	public static void onRequestPurchaseResponse(@NotNull String productId, @NotNull ResponseCode response) {
+		BillingObserverRegistry.onRequestPurchaseResponse(productId, response);
 	}
 
-	public static void onPurchaseIntent(@NotNull String itemId, @NotNull PendingIntent purchaseIntent) {
-		BillingObserverRegistry.onPurchaseIntent(itemId, purchaseIntent);
+	public static void onPurchaseIntent(@NotNull String productId, @NotNull PendingIntent purchaseIntent) {
+		BillingObserverRegistry.onPurchaseIntent(productId, purchaseIntent);
+	}
+
+	public static void onPurchaseIntentFailure(@NotNull String productId, @NotNull ResponseCode responseCode) {
+		BillingObserverRegistry.onPurchaseIntentFailure(productId, responseCode);
 	}
 
 	public static void onTransactionsRestored() {

@@ -22,6 +22,7 @@ import android.content.SharedPreferences.Editor;
 import android.preference.PreferenceManager;
 import net.robotmedia.billing.BillingController;
 import net.robotmedia.billing.IBillingObserver;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Abstract subclass of IBillingObserver that provides default implementations
@@ -48,13 +49,13 @@ public abstract class AbstractBillingObserver implements IBillingObserver {
 	 * Called after requesting the purchase of the specified item. The default
 	 * implementation simply starts the pending intent.
 	 * 
-	 * @param itemId
+	 * @param productId
 	 *            id of the item whose purchase was requested.
 	 * @param purchaseIntent
 	 *            a purchase pending intent for the specified item.
 	 */
 	@Override
-	public void onPurchaseIntent(String itemId, PendingIntent purchaseIntent) {
+	public void onPurchaseIntent(@NotNull String productId, @NotNull PendingIntent purchaseIntent) {
 		BillingController.startPurchaseIntent(activity, purchaseIntent, null);
 	}
 

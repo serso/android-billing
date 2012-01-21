@@ -35,17 +35,17 @@ public class TransactionManager {
 		}
 	}
 
-	public synchronized static boolean isPurchased(@NotNull Context context, @NotNull String itemId) {
-		return countPurchases(context, itemId) > 0;
+	public synchronized static boolean isPurchased(@NotNull Context context, @NotNull String productId) {
+		return countPurchases(context, productId) > 0;
 	}
 
-	public synchronized static int countPurchases(@NotNull Context context, @NotNull String itemId) {
-		return doDatabaseOperation(context, new CountPurchases(itemId));
+	public synchronized static int countPurchases(@NotNull Context context, @NotNull String productId) {
+		return doDatabaseOperation(context, new CountPurchases(productId));
 	}
 
 	@NotNull
 	public synchronized static List<Transaction> getTransactions(@NotNull Context context) {
-		return doDatabaseOperation(context, new TransactionsByItemId(null));
+		return doDatabaseOperation(context, new TransactionsByProductId(null));
 	}
 
 	@NotNull
@@ -60,23 +60,23 @@ public class TransactionManager {
 	}
 
 	@NotNull
-	public synchronized static List<Transaction> getTransactions(@NotNull Context context, @NotNull String itemId) {
-		return doDatabaseOperation(context, new TransactionsByItemId(itemId));
+	public synchronized static List<Transaction> getTransactions(@NotNull Context context, @NotNull String productId) {
+		return doDatabaseOperation(context, new TransactionsByProductId(productId));
 	}
 
 	private static class CountPurchases implements DatabaseOperation<Integer> {
 
 		@NotNull
-		private final String itemId;
+		private final String productId;
 
-		public CountPurchases(@NotNull String itemId) {
-			this.itemId = itemId;
+		public CountPurchases(@NotNull String productId) {
+			this.productId = productId;
 		}
 
 		@NotNull
 		@Override
 		public Cursor createCursor(@NotNull BillingDB db) {
-			return db.getTransactionsQuery(itemId, PurchaseState.PURCHASED);
+			return db.getTransactionsQuery(productId, PurchaseState.PURCHASED);
 		}
 
 		@NotNull
@@ -86,20 +86,20 @@ public class TransactionManager {
 		}
 	}
 
-	private static class TransactionsByItemId implements DatabaseOperation<List<Transaction>> {
+	private static class TransactionsByProductId implements DatabaseOperation<List<Transaction>> {
 
 		@Nullable
-		private final String item;
+		private final String productId;
 
-		public TransactionsByItemId(@Nullable String item) {
-			this.item = item;
+		public TransactionsByProductId(@Nullable String productId) {
+			this.productId = productId;
 		}
 
 		@NotNull
 		@Override
 		public Cursor createCursor(@NotNull BillingDB db) {
-			if (item != null) {
-				return db.getTransactionsQuery(item);
+			if (productId != null) {
+				return db.getTransactionsQuery(productId);
 			} else {
 				return db.getAllTransactionsQuery();
 			}
