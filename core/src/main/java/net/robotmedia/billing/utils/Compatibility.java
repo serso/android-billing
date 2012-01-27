@@ -21,6 +21,7 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.util.Log;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -56,7 +57,7 @@ public class Compatibility {
 		}
 	}
 
-	public static void startIntentSender(@NotNull Activity activity, @NotNull IntentSender intentSender, @NotNull Intent intent) {
+	public static void startIntentSender(@NotNull Activity activity, @NotNull IntentSender intentSender, @Nullable Intent intent) {
 		if (startIntentSender != null) {
 
 			final Object[] args = new Object[5];
