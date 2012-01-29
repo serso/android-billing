@@ -17,12 +17,12 @@ public class CatalogEntry {
 		MANAGED, UNMANAGED
 	}
 	
-	public String sku;
+	public String productId;
 	public int nameId;
 	public Managed managed;
 
-	public CatalogEntry(String sku, int nameId, Managed managed) {
-		this.sku = sku;
+	public CatalogEntry(String productId, int nameId, Managed managed) {
+		this.productId = productId;
 		this.nameId = nameId;
 		this.managed = managed;
 	}

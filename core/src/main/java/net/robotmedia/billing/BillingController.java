@@ -125,9 +125,15 @@ public class BillingController {
 	 * @see IBillingObserver#onBillingChecked(boolean)
 	 */
 	public static BillingStatus checkBillingSupported(@NotNull Context context) {
+
 		if (status == BillingStatus.UNKNOWN) {
 			BillingService.checkBillingSupported(context);
+		} else if (status == BillingStatus.SUPPORTED) {
+			onBillingChecked(true);
+		} else {
+			onBillingChecked(false);
 		}
+
 		return status;
 	}
 
@@ -174,8 +180,7 @@ public class BillingController {
 	 * @return number of purchases for the specified item.
 	 */
 	public static int countPurchases(@NotNull Context context, @NotNull String productId) {
-		final byte[] salt = getSalt();
-		final String obfuscatedItemId = Security.obfuscate(context, salt, productId);
+		final String obfuscatedItemId = Security.obfuscate(context, getSalt(), productId);
 
 		// item id != null => obfuscatedItemId != null
 		assert obfuscatedItemId != null;
@@ -242,11 +247,13 @@ public class BillingController {
 	public static List<Transaction> getTransactions(@NotNull Context context, @NotNull String productId) {
 		byte[] salt = getSalt();
 
-		final String obfuscatedItemId = Security.obfuscate(context, salt, productId);
+		final String obfuscatedItemId = Security.obfuscate(context, getSalt(), productId);
 
 		assert obfuscatedItemId != null;
+
 		final List<Transaction> transactions = TransactionManager.getTransactions(context, obfuscatedItemId);
 		ObfuscateUtils.unobfuscate(context, transactions, salt);
+
 		return transactions;
 	}
 

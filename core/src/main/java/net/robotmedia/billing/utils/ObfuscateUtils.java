@@ -51,9 +51,6 @@ public final class ObfuscateUtils {
 	 * @see #obfuscate(android.content.Context, net.robotmedia.billing.model.Transaction, byte[])
 	 */
 	public static void unobfuscate(@NotNull Context context, @NotNull Transaction t, @Nullable byte[] salt) {
-		if (salt == null) {
-			return;
-		}
 		t.orderId = Security.unobfuscate(context, salt, t.orderId);
 		t.productId = Security.unobfuscate(context, salt, t.productId);
 		t.developerPayload = Security.unobfuscate(context, salt, t.developerPayload);

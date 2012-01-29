@@ -19,7 +19,7 @@ import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Transaction {
+public class Transaction implements Cloneable {
 
 	public static enum PurchaseState {
 		// Responses to requestPurchase or restoreTransactions.
@@ -107,7 +107,6 @@ public class Transaction {
 		Transaction clone;
 
 		try {
-			//noinspection UnusedAssignment
 			clone = (Transaction) super.clone();
 		} catch (CloneNotSupportedException e) {
 			throw new AssertionError(e);
@@ -151,7 +150,11 @@ public class Transaction {
 
 	@Override
 	public String toString() {
-		return String.valueOf(orderId);
+		return "Transaction{" +
+				"orderId='" + orderId + '\'' +
+				", productId='" + productId + '\'' +
+				", purchaseTime=" + purchaseTime +
+				", purchaseState=" + purchaseState +
+				'}';
 	}
-
 }

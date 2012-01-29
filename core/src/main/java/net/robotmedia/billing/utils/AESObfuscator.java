@@ -31,6 +31,7 @@ import java.security.spec.KeySpec;
  * An obfuscator that uses AES to encrypt data.
  */
 public class AESObfuscator {
+
 	private static final String UTF8 = "UTF-8";
 
 	private static final String KEYGEN_ALGORITHM = "PBEWITHSHAAND256BITAES-CBC-BC";
@@ -46,7 +47,7 @@ public class AESObfuscator {
 	@NotNull
 	private final Cipher decryptor;
 
-	public AESObfuscator(byte[] salt, String password) {
+	public AESObfuscator(@NotNull byte[] salt, String password) {
 		try {
 			// get algorithm by name
 			final SecretKeyFactory factory = SecretKeyFactory.getInstance(KEYGEN_ALGORITHM);

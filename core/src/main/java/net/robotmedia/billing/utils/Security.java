@@ -81,11 +81,11 @@ public class Security {
 	 */
 	@Nullable
 	public static String obfuscate(@NotNull Context context, @Nullable byte[] salt, @Nullable String source) {
-		return getObfuscator(context, salt).obfuscate(source);
+		return salt == null ? source : getObfuscator(context, salt).obfuscate(source);
 	}
 
 	@NotNull
-	private static AESObfuscator getObfuscator(@NotNull Context context, @Nullable byte[] salt) {
+	private static AESObfuscator getObfuscator(@NotNull Context context, @NotNull byte[] salt) {
 		// todo serso: optimize synchronization
 		// obfuscatorLock object used only in order not to lock the whole class by synchronizing method
 		synchronized (obfuscatorLock) {
@@ -113,13 +113,19 @@ public class Security {
 	 */
 	@Nullable
 	public static String unobfuscate(@NotNull Context context, @Nullable byte[] salt, @Nullable String obfuscated) {
-		final AESObfuscator obfuscator = getObfuscator(context, salt);
-		try {
-			return obfuscator.unobfuscate(obfuscated);
-		} catch (ValidationException e) {
-			Log.w(TAG, "Invalid obfuscated data or key");
+		if (salt != null) {
+			final AESObfuscator obfuscator = getObfuscator(context, salt);
+			try {
+				return obfuscator.unobfuscate(obfuscated);
+			} catch (ValidationException e) {
+				Log.w(TAG, "Invalid obfuscated data or key");
+			}
+
+			return null;
+
+		} else {
+			return obfuscated;
 		}
-		return null;
 	}
 
 }

@@ -7,26 +7,19 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.AdapterView;
+import android.widget.*;
 import android.widget.AdapterView.OnItemSelectedListener;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.ListView;
-import android.widget.Spinner;
-import android.widget.Toast;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import net.robotmedia.billing.BillingController;
-import net.robotmedia.billing.requests.ResponseCode;
-import net.robotmedia.billing.example.R;
 import net.robotmedia.billing.example.auxiliary.CatalogAdapter;
 import net.robotmedia.billing.example.auxiliary.CatalogEntry;
 import net.robotmedia.billing.helper.AbstractBillingObserver;
 import net.robotmedia.billing.model.Transaction;
 import net.robotmedia.billing.model.Transaction.PurchaseState;
+import net.robotmedia.billing.requests.ResponseCode;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A sample application based on the original Dungeons to demonstrate how to use
@@ -37,12 +30,11 @@ public class Dungeons extends Activity {
 	private static final String TAG = "Dungeons";
 
 	private Button mBuyButton;
-	private Spinner mSelectItemSpinner;
-	private ListView mOwnedItemsTable;
+	private ListView itemsTable;
 
 	private static final int DIALOG_BILLING_NOT_SUPPORTED_ID = 2;
 
-	private String mSku;
+	private String productId;
 
 	private CatalogAdapter mCatalogAdapter;
 
@@ -72,6 +64,11 @@ public class Dungeons extends Activity {
 			@Override
 			public void onBillingChecked(boolean supported) {
 				Dungeons.this.onBillingChecked(supported);
+			}
+
+			@Override
+			public void onPurchaseIntentFailure(@NotNull String productId, @NotNull ResponseCode responseCode) {
+				// do nothing
 			}
 
 			@Override
@@ -110,11 +107,14 @@ public class Dungeons extends Activity {
 	}
 
 	public void onPurchaseStateChanged(String productId, PurchaseState state) {
-		Log.i(TAG, "onPurchaseStateChanged() productId: " + productId);
+		Log.i(TAG, "onPurchaseStateChanged() productId: " + productId + ", state: " + state);
+		Toast.makeText(this, "onPurchaseStateChanged() productId: " + productId + ", state: " + state, Toast.LENGTH_SHORT).show();
 		updateOwnedItems();
 	}
 
 	public void onRequestPurchaseResponse(String productId, ResponseCode response) {
+		Log.i(TAG, "onRequestPurchaseResponse() productId: " + productId + ", response: " + response);
+		Toast.makeText(this, "onRequestPurchaseResponse() productId: " + productId + ", response: " + response, Toast.LENGTH_SHORT).show();
 	}
 
 	/**
@@ -137,17 +137,18 @@ public class Dungeons extends Activity {
 
 			@Override
 			public void onClick(View v) {
-				BillingController.requestPurchase(Dungeons.this, mSku, true /* confirm */);
+				Toast.makeText(Dungeons.this, "Purchasing " + productId, Toast.LENGTH_SHORT).show();
+				BillingController.requestPurchase(Dungeons.this, productId, true /* confirm */);
 			}
 		});
 
-		mSelectItemSpinner = (Spinner) findViewById(R.id.item_choices);
+		final Spinner mSelectItemSpinner = (Spinner) findViewById(R.id.item_choices);
 		mCatalogAdapter = new CatalogAdapter(this, CatalogEntry.CATALOG);
 		mSelectItemSpinner.setAdapter(mCatalogAdapter);
 		mSelectItemSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
 
 			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-				mSku = CatalogEntry.CATALOG[position].sku;
+				productId = CatalogEntry.CATALOG[position].productId;
 			}
 
 			public void onNothingSelected(AdapterView<?> arg0) {
@@ -155,21 +156,24 @@ public class Dungeons extends Activity {
 
 		});
 
-		mOwnedItemsTable = (ListView) findViewById(R.id.owned_items);
+		itemsTable = (ListView) findViewById(R.id.owned_items);
 	}
 
 	private void updateOwnedItems() {
-		List<Transaction> transactions = BillingController.getTransactions(this);
-		final ArrayList<String> ownedItems = new ArrayList<String>();
-		for (Transaction t : transactions) {
+		final List<Transaction> items = BillingController.getTransactions(this);
+
+		Toast.makeText(this, items.size() + " items found!", Toast.LENGTH_SHORT).show();
+
+		final List<Transaction> ownedItems = new ArrayList<Transaction>();
+		for (Transaction t : items) {
 			if (t.purchaseState == PurchaseState.PURCHASED) {
-				ownedItems.add(t.productId);
+				ownedItems.add(t);
 			}
 		}
 
+		Toast.makeText(this, ownedItems.size() + " purchased items found!", Toast.LENGTH_SHORT).show();
+
 		mCatalogAdapter.setOwnedItems(ownedItems);
-		final ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.item_row, R.id.item_name,
-				ownedItems);
-		mOwnedItemsTable.setAdapter(adapter);
+		itemsTable.setAdapter(new ArrayAdapter<Transaction>(this, R.layout.item_row, R.id.item_name, items));
 	}
 }

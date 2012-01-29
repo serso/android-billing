@@ -17,16 +17,18 @@
  */
 -->
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:background="@color/screen_background">
-    <TextView
-        android:id="@+id/item_name"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:paddingLeft="10dip"
-        android:layout_alignParentLeft="true"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColor="@android:color/black" />
+<RelativeLayout xmlns:a="http://schemas.android.com/apk/res/android"
+				a:layout_width="fill_parent"
+				a:layout_height="wrap_content"
+				a:background="@color/screen_background">
+	<TextView
+			a:id="@+id/item_name"
+			a:layout_width="wrap_content"
+			a:layout_height="wrap_content"
+			a:paddingLeft="10dip"
+			a:paddingBottom="20dip"
+			a:layout_alignParentLeft="true"
+			a:textAppearance="?android:attr/textAppearanceMedium"
+			a:textColor="@android:color/black"/>
+
 </RelativeLayout>
