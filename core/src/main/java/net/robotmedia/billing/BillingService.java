@@ -42,7 +42,6 @@ public class BillingService extends Service implements ServiceConnection, IBilli
 	@NotNull
 	private static final List<IBillingRequest> pendingRequests = new LinkedList<IBillingRequest>();
 
-	// todo serso: currently not synchronized => make synchronization or check if synchronization is needed
 	@Nullable
 	private static IMarketBillingService service;
 
