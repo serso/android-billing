@@ -59,7 +59,8 @@ public class Transaction {
 
 	static final String PURCHASE_TIME = "purchaseTime";
 
-	public static Transaction parse(@NotNull JSONObject json) throws JSONException {
+	@NotNull
+	public static Transaction newInstance(@NotNull JSONObject json) throws JSONException {
 		final Transaction transaction = new Transaction();
 
 		final int response = json.getInt(PURCHASE_STATE);
@@ -85,8 +86,13 @@ public class Transaction {
 	public Transaction() {
 	}
 
-	public Transaction(String orderId, String productId, String packageName, PurchaseState purchaseState,
-					   String notificationId, long purchaseTime, String developerPayload) {
+	public Transaction(String orderId,
+					   String productId,
+					   String packageName,
+					   PurchaseState purchaseState,
+					   String notificationId,
+					   long purchaseTime,
+					   String developerPayload) {
 		this.orderId = orderId;
 		this.productId = productId;
 		this.packageName = packageName;

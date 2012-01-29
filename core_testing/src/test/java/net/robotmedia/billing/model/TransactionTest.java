@@ -15,13 +15,11 @@
 
 package net.robotmedia.billing.model;
 
-import java.util.Date;
-
+import android.test.suitebuilder.annotation.SmallTest;
+import junit.framework.TestCase;
 import org.json.JSONObject;
 
-import android.test.suitebuilder.annotation.SmallTest;
-
-import junit.framework.TestCase;
+import java.util.Date;
 
 public class TransactionTest extends TestCase {
 	
@@ -43,7 +41,7 @@ public class TransactionTest extends TestCase {
 		json.put(Transaction.NOTIFICATION_ID, TRANSACTION_1.notificationId);
 		json.put(Transaction.PURCHASE_TIME, TRANSACTION_1.purchaseTime);
 		json.put(Transaction.DEVELOPER_PAYLOAD, TRANSACTION_1.developerPayload);
-		final Transaction parsed = Transaction.parse(json);
+		final Transaction parsed = Transaction.newInstance(json);
 		assertEquals(TRANSACTION_1, parsed);
 	}
 	
@@ -54,7 +52,7 @@ public class TransactionTest extends TestCase {
 		json.put(Transaction.PACKAGE_NAME, TRANSACTION_1.packageName);
 		json.put(Transaction.PURCHASE_STATE, TRANSACTION_1.purchaseState.ordinal());
 		json.put(Transaction.PURCHASE_TIME, TRANSACTION_1.purchaseTime);
-		final Transaction parsed = Transaction.parse(json);
+		final Transaction parsed = Transaction.newInstance(json);
 		assertNull(parsed.orderId);
 		assertEquals(TRANSACTION_1.productId, parsed.productId);
 		assertEquals(TRANSACTION_1.packageName, parsed.packageName);

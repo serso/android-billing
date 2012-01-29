@@ -420,7 +420,7 @@ public class BillingController {
 		if (orders != null) {
 			for (int i = 0; i < orders.length(); i++) {
 				final JSONObject jElement = orders.getJSONObject(i);
-				result.add(Transaction.parse(jElement));
+				result.add(Transaction.newInstance(jElement));
 			}
 		}
 
