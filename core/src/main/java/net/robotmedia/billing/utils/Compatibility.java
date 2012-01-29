@@ -57,15 +57,17 @@ public class Compatibility {
 		}
 	}
 
-	public static void startIntentSender(@NotNull Activity activity, @NotNull IntentSender intentSender, @Nullable Intent intent) {
+	public static void startIntentSender(@NotNull Activity activity,
+										 @NotNull IntentSender intentSender,
+										 @Nullable Intent intent) {
 		if (startIntentSender != null) {
 
 			final Object[] args = new Object[5];
 			args[0] = intentSender;
 			args[1] = intent;
-			args[2] = Integer.valueOf(0);
-			args[3] = Integer.valueOf(0);
-			args[4] = Integer.valueOf(0);
+			args[2] = 0;
+			args[3] = 0;
+			args[4] = 0;
 
 			try {
 				startIntentSender.invoke(activity, args);

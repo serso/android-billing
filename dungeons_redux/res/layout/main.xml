@@ -56,7 +56,8 @@
             android:layout_height="wrap_content"
             android:prompt="@string/select_item" />
     </LinearLayout>
-    <TextView
+
+	<TextView
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:paddingTop="10dip"
@@ -71,4 +72,21 @@
         android:paddingTop="4dip"
         android:paddingBottom="4dip">
     </ListView>
+
+	<TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="10dip"
+        android:textColor="@android:color/black"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textStyle="bold"
+        android:text="@string/all_transactions" />
+    <ListView
+        android:id="@+id/all_transactions"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="4dip"
+        android:paddingBottom="4dip">
+    </ListView>
+
 </LinearLayout>

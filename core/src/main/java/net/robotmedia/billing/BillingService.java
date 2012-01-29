@@ -24,7 +24,6 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 import com.android.vending.billing.IMarketBillingService;
-import net.robotmedia.billing.requests.IBillingRequest;
 import net.robotmedia.billing.utils.Compatibility;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -45,39 +44,39 @@ public class BillingService extends Service implements ServiceConnection, IBilli
 	@Nullable
 	private static IMarketBillingService service;
 
-	public static void checkBillingSupported(@NotNull Context context) {
+	static void checkBillingSupported(@NotNull Context context) {
 		context.startService(createIntent(context, BillingRequestType.CHECK_BILLING_SUPPORTED));
 	}
 
-	public static void confirmNotifications(@NotNull Context context, @NotNull String[] notifyIds) {
+	static void confirmNotifications(@NotNull Context context, @NotNull String[] notifyIds) {
 		final Intent intent = createIntent(context, BillingRequestType.CONFIRM_NOTIFICATIONS);
 		intent.putExtra(BillingRequestType.EXTRA_NOTIFY_IDS, notifyIds);
 		context.startService(intent);
 	}
 
-	public static void confirmNotifications(@NotNull Context context, @NotNull Collection<String> notifyIds) {
+	static void confirmNotifications(@NotNull Context context, @NotNull Collection<String> notifyIds) {
 		confirmNotifications(context, notifyIds.toArray(new String[notifyIds.size()]));
 	}
 
-	public static void getPurchaseInformation(@NotNull Context context, @NotNull Collection<String> notifyIds, long nonce) {
+	static void getPurchaseInformation(@NotNull Context context, @NotNull Collection<String> notifyIds, long nonce) {
 		getPurchaseInformation(context, notifyIds.toArray(new String[notifyIds.size()]), nonce);
 	}
 
-	public static void getPurchaseInformation(@NotNull Context context, @NotNull String[] notifyIds, long nonce) {
+	static void getPurchaseInformation(@NotNull Context context, @NotNull String[] notifyIds, long nonce) {
 		final Intent intent = createIntent(context, BillingRequestType.GET_PURCHASE_INFORMATION);
 		intent.putExtra(BillingRequestType.EXTRA_NOTIFY_IDS, notifyIds);
 		intent.putExtra(BillingRequestType.EXTRA_NONCE, nonce);
 		context.startService(intent);
 	}
 
-	public static void requestPurchase(@NotNull Context context, @NotNull String productId, @Nullable String developerPayload) {
+	static void requestPurchase(@NotNull Context context, @NotNull String productId, @Nullable String developerPayload) {
 		final Intent intent = createIntent(context, BillingRequestType.REQUEST_PURCHASE);
 		intent.putExtra(BillingRequestType.EXTRA_ITEM_ID, productId);
 		intent.putExtra(BillingRequestType.EXTRA_DEVELOPER_PAYLOAD, developerPayload);
 		context.startService(intent);
 	}
 
-	public static void restoreTransactions(@NotNull Context context, long nonce) {
+	static void restoreTransactions(@NotNull Context context, long nonce) {
 		final Intent intent = createIntent(context, BillingRequestType.RESTORE_TRANSACTIONS);
 		intent.setClass(context, BillingService.class);
 		intent.putExtra(BillingRequestType.EXTRA_NONCE, nonce);

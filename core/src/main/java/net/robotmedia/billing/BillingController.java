@@ -24,8 +24,6 @@ import android.text.TextUtils;
 import android.util.Log;
 import net.robotmedia.billing.model.Transaction;
 import net.robotmedia.billing.model.TransactionManager;
-import net.robotmedia.billing.requests.IBillingRequest;
-import net.robotmedia.billing.requests.ResponseCode;
 import net.robotmedia.billing.security.DefaultSignatureValidator;
 import net.robotmedia.billing.security.ISignatureValidator;
 import net.robotmedia.billing.utils.Compatibility;
@@ -54,6 +52,8 @@ public class BillingController {
 
 		/**
 		 * Returns a salt for the obfuscation of purchases in local memory.
+		 * NOTE: this array must be the same during different application starts
+		 * or user must call the net.robotmedia.billing.BillingController#restoreTransactions(android.content.Context) method to get all transaction from market
 		 *
 		 * @return array of 20 random bytes.
 		 */
@@ -101,7 +101,7 @@ public class BillingController {
 	 * Adds the specified notification to the set of manual confirmations of the
 	 * specified item.
 	 *
-	 * @param productId		 id of the item.
+	 * @param productId	  id of the item.
 	 * @param notificationId id of the notification.
 	 */
 	private static void addManualConfirmation(@NotNull String productId, @NotNull String notificationId) {
@@ -116,32 +116,39 @@ public class BillingController {
 	}
 
 	/**
-	 * Returns the billing status. If it is currently unknown, checks the billing
-	 * status asynchronously, in which case observers will eventually receive
-	 * a {@link IBillingObserver#onBillingChecked(boolean)} notification.
+	 * Returns the current billing status. NOTE: current billing status may be not the same as the actual status needs some time to update (but nevertheless it can be used as first approach)
+	 * This method calls billing service to determine the exact status and notify listeners through IBillingObserver#onCheckBillingSupportedResponse(boolean) method
 	 *
 	 * @param context context
-	 * @return the current billing status (unknown, supported or unsupported).
-	 * @see IBillingObserver#onBillingChecked(boolean)
+	 *
+	 * @return the current billing status (unknown, supported or unsupported)
+	 *
+	 * @see IBillingObserver#onCheckBillingSupportedResponse(boolean)
 	 */
+	@NotNull
 	public static BillingStatus checkBillingSupported(@NotNull Context context) {
-
-		if (status == BillingStatus.UNKNOWN) {
-			BillingService.checkBillingSupported(context);
-		} else if (status == BillingStatus.SUPPORTED) {
-			onBillingChecked(true);
-		} else {
-			onBillingChecked(false);
-		}
-
+		BillingService.checkBillingSupported(context);
 		return status;
 	}
 
 	/**
-	 * Requests to confirm all pending notifications for the specified item.
+	 * Called after the response to a
+	 * {@link net.robotmedia.billing.BillingRequest.CheckBillingSupported} request is
+	 * received.
 	 *
-	 * @param context context
-	 * @param productId  id of the item whose purchase must be confirmed.
+	 * @param supported billing supported
+	 */
+	static void onCheckBillingSupportedResponse(boolean supported) {
+		status = supported ? BillingStatus.SUPPORTED : BillingStatus.UNSUPPORTED;
+		BillingObserverRegistry.onCheckBillingSupportedResponse(supported);
+	}
+
+
+	/**
+	 * Requests to confirm all pending MANUAL notifications for the specified item.
+	 *
+	 * @param context   context
+	 * @param productId id of the item whose purchase must be confirmed.
 	 * @return true if pending notifications for this item were found, false
 	 *         otherwise.
 	 */
@@ -167,16 +174,21 @@ public class BillingController {
 		BillingService.confirmNotifications(context, notifyIds);
 	}
 
+	/**
+	 * Requests to confirm all specified notifications.
+	 *
+	 * @param context   context
+	 * @param notifyIds array with the ids of all the notifications to confirm.
+	 */
 	private static void confirmNotifications(@NotNull Context context, @NotNull Collection<String> notifyIds) {
 		BillingService.confirmNotifications(context, notifyIds);
 	}
 
 	/**
-	 * Returns the number of purchases for the specified item. Refunded and
-	 * cancelled purchases are not subtracted. See
+	 * Returns the number of purchases for the specified item. Only transactions with state PURCHASED are counted
 	 *
-	 * @param context context
-	 * @param productId  id of the item whose purchases will be counted.
+	 * @param context   context
+	 * @param productId id of the item whose purchases will be counted.
 	 * @return number of purchases for the specified item.
 	 */
 	public static int countPurchases(@NotNull Context context, @NotNull String productId) {
@@ -187,8 +199,8 @@ public class BillingController {
 		return TransactionManager.countPurchases(context, obfuscatedItemId);
 	}
 
-	protected static void debug(String message) {
-		if (debug) {
+	protected static void debug(@Nullable String message) {
+		if (debug && message != null) {
 			Log.d(LOG_TAG, message);
 		}
 	}
@@ -239,8 +251,8 @@ public class BillingController {
 	/**
 	 * Lists all transactions of the specified item, stored locally.
 	 *
-	 * @param context context
-	 * @param productId  id of the item whose transactions will be returned.
+	 * @param context   context
+	 * @param productId id of the item whose transactions will be returned.
 	 * @return list of transactions.
 	 */
 	@NotNull
@@ -263,8 +275,8 @@ public class BillingController {
 	 * will still return true. Also note that the item might have been purchased
 	 * in another installation, but not yet registered in this one.
 	 *
-	 * @param context context
-	 * @param productId  item id.
+	 * @param context   context
+	 * @param productId item id.
 	 * @return true if the specified item is purchased, false otherwise.
 	 */
 	public static boolean isPurchased(@NotNull Context context, @NotNull String productId) {
@@ -276,24 +288,12 @@ public class BillingController {
 	}
 
 	/**
-	 * Called after the response to a
-	 * {@link net.robotmedia.billing.requests.CheckBillingSupportedRequest} request is
-	 * received.
-	 *
-	 * @param supported billing supported
-	 */
-	public static void onBillingChecked(boolean supported) {
-		status = supported ? BillingStatus.SUPPORTED : BillingStatus.UNSUPPORTED;
-		BillingObserverRegistry.onBillingCheckedObservers(supported);
-	}
-
-	/**
 	 * Called when an IN_APP_NOTIFY message is received.
 	 *
 	 * @param context  context
 	 * @param notifyId notification id.
 	 */
-	protected static void onNotify(Context context, String notifyId) {
+	protected static void onNotify(@NotNull Context context, @NotNull String notifyId) {
 		debug("Notification " + notifyId + " available");
 
 		getPurchaseInformation(context, notifyId);
@@ -301,7 +301,7 @@ public class BillingController {
 
 	/**
 	 * Called after the response to a
-	 * {@link net.robotmedia.billing.requests.GetPurchaseInformationRequest} request is
+	 * {@link net.robotmedia.billing.BillingRequest.GetPurchaseInformation} request is
 	 * received. Registers all transactions in local memory and confirms those
 	 * who can be confirmed automatically.
 	 *
@@ -371,7 +371,7 @@ public class BillingController {
 	}
 
 	/**
-	 * Called after a {@link net.robotmedia.billing.requests.BillingRequest} is
+	 * Called after a {@link BillingRequest} is
 	 * sent.
 	 *
 	 * @param requestId the id the request.
@@ -391,12 +391,12 @@ public class BillingController {
 	}
 
 	/**
-	 * Called after a {@link net.robotmedia.billing.requests.BillingRequest} is
+	 * Called after a {@link BillingRequest} is
 	 * sent.
 	 *
 	 * @param requestId	the id of the request.
 	 * @param responseCode the response code.
-	 * @see net.robotmedia.billing.requests.ResponseCode
+	 * @see ResponseCode
 	 */
 	protected static void onResponseCode(long requestId, int responseCode) {
 		final ResponseCode response = ResponseCode.valueOf(responseCode);
@@ -438,8 +438,8 @@ public class BillingController {
 	 * Requests the purchase of the specified item. The transaction will not be
 	 * confirmed automatically.
 	 *
-	 * @param context context
-	 * @param productId  id of the item to be purchased.
+	 * @param context   context
+	 * @param productId id of the item to be purchased.
 	 * @see #requestPurchase(Context, String, boolean)
 	 */
 	public static void requestPurchase(@NotNull Context context, @NotNull String productId) {
@@ -451,11 +451,11 @@ public class BillingController {
 	 * confirmation.
 	 *
 	 * @param context		  context
-	 * @param productId		   id of the item to be purchased.
+	 * @param productId		id of the item to be purchased.
 	 * @param autoConfirmation if true, the transaction will be confirmed automatically. If
 	 *                         false, the transaction will have to be confirmed with a call
 	 *                         to {@link #confirmNotifications(Context, String)}.
-	 * @see IBillingObserver#onPurchaseIntent(String, PendingIntent)
+	 * @see IBillingObserver#onPurchaseIntentOK(String, PendingIntent)
 	 */
 	public static void requestPurchase(@NotNull Context context,
 									   @NotNull String productId,
@@ -474,7 +474,7 @@ public class BillingController {
 	 *
 	 * @param context context
 	 */
-	public static void restoreTransactions(Context context) {
+	public static void restoreTransactions(@NotNull Context context) {
 		final long nonce = Security.generateNonce();
 		BillingService.restoreTransactions(context, nonce);
 	}
@@ -511,7 +511,7 @@ public class BillingController {
 	}
 
 	@NotNull
-	public static ISignatureValidator getSignatureValidator() {
+	static ISignatureValidator getSignatureValidator() {
 		return BillingController.validator != null ? BillingController.validator : new DefaultSignatureValidator(BillingController.configuration);
 	}
 
@@ -522,7 +522,9 @@ public class BillingController {
 	 * @param purchaseIntent purchase intent.
 	 * @param intent		 intent
 	 */
-	public static void startPurchaseIntent(Activity activity, PendingIntent purchaseIntent, Intent intent) {
+	public static void startPurchaseIntent(@NotNull Activity activity,
+										   @NotNull PendingIntent purchaseIntent,
+										   @Nullable Intent intent) {
 		if (Compatibility.isStartIntentSenderSupported()) {
 			// This is on Android 2.0 and beyond. The in-app buy page activity
 			// must be on the activity stack of the application.
@@ -555,19 +557,19 @@ public class BillingController {
 		}
 	}
 
-	public static void onRequestPurchaseResponse(@NotNull String productId, @NotNull ResponseCode response) {
+	static void onRequestPurchaseResponse(@NotNull String productId, @NotNull ResponseCode response) {
 		BillingObserverRegistry.onRequestPurchaseResponse(productId, response);
 	}
 
-	public static void onPurchaseIntent(@NotNull String productId, @NotNull PendingIntent purchaseIntent) {
+	static void onPurchaseIntent(@NotNull String productId, @NotNull PendingIntent purchaseIntent) {
 		BillingObserverRegistry.onPurchaseIntent(productId, purchaseIntent);
 	}
 
-	public static void onPurchaseIntentFailure(@NotNull String productId, @NotNull ResponseCode responseCode) {
+	static void onPurchaseIntentFailure(@NotNull String productId, @NotNull ResponseCode responseCode) {
 		BillingObserverRegistry.onPurchaseIntentFailure(productId, responseCode);
 	}
 
-	public static void onTransactionsRestored() {
+	static void onTransactionsRestored() {
 		BillingObserverRegistry.onTransactionsRestored();
 	}
 

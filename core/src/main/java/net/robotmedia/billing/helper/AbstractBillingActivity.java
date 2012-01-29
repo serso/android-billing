@@ -15,10 +15,9 @@
 
 package net.robotmedia.billing.helper;
 
-import android.widget.Toast;
 import net.robotmedia.billing.BillingController;
 import net.robotmedia.billing.BillingController.BillingStatus;
-import net.robotmedia.billing.requests.ResponseCode;
+import net.robotmedia.billing.ResponseCode;
 import net.robotmedia.billing.model.Transaction.PurchaseState;
 import android.app.Activity;
 import org.jetbrains.annotations.NotNull;
@@ -49,7 +48,7 @@ public abstract class AbstractBillingActivity extends Activity implements Billin
 		mBillingObserver = new AbstractBillingObserver(this) {
 
 			@Override
-			public void onBillingChecked(boolean supported) {
+			public void onCheckBillingSupportedResponse(boolean supported) {
 				AbstractBillingActivity.this.onBillingChecked(supported);
 			}
 

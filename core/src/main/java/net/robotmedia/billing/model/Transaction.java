@@ -19,6 +19,8 @@ import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Date;
+
 public class Transaction implements Cloneable {
 
 	public static enum PurchaseState {
@@ -153,7 +155,7 @@ public class Transaction implements Cloneable {
 		return "Transaction{" +
 				"orderId='" + orderId + '\'' +
 				", productId='" + productId + '\'' +
-				", purchaseTime=" + purchaseTime +
+				", purchaseTime=" + new Date(purchaseTime) +
 				", purchaseState=" + purchaseState +
 				'}';
 	}

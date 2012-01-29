@@ -26,7 +26,7 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * Abstract subclass of IBillingObserver that provides default implementations
- * for {@link IBillingObserver#onPurchaseIntent(String, PendingIntent)} and
+ * for {@link IBillingObserver#onPurchaseIntentOK(String, PendingIntent)} and
  * {@link IBillingObserver#onTransactionsRestored()}.
  * 
  */
@@ -55,7 +55,7 @@ public abstract class AbstractBillingObserver implements IBillingObserver {
 	 *            a purchase pending intent for the specified item.
 	 */
 	@Override
-	public void onPurchaseIntent(@NotNull String productId, @NotNull PendingIntent purchaseIntent) {
+	public void onPurchaseIntentOK(@NotNull String productId, @NotNull PendingIntent purchaseIntent) {
 		BillingController.startPurchaseIntent(activity, purchaseIntent, null);
 	}
 

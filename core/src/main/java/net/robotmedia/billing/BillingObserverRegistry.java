@@ -2,7 +2,6 @@ package net.robotmedia.billing;
 
 import android.app.PendingIntent;
 import net.robotmedia.billing.model.Transaction;
-import net.robotmedia.billing.requests.ResponseCode;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -15,21 +14,26 @@ import java.util.Set;
  * Date: 1/18/12
  * Time: 11:49 AM
  */
+
+/**
+ * This class is used for storing all the registered observers of billing service.
+ * Use this class to notify all the net.robotmedia.billing.IBillingObserver observers
+ */
 class BillingObserverRegistry {
 
 	// synchronized field
 	@NotNull
 	private static final Set<IBillingObserver> observers = new HashSet<IBillingObserver>();
 
-	static void onBillingCheckedObservers(boolean supported) {
+	static void onCheckBillingSupportedResponse(boolean supported) {
 		for (IBillingObserver o : getSynchronizedObservers()) {
-			o.onBillingChecked(supported);
+			o.onCheckBillingSupportedResponse(supported);
 		}
 	}
 
 	/**
 	 * Called after the response to a
-	 * {@link net.robotmedia.billing.requests.RequestPurchase} request is
+	 * {@link net.robotmedia.billing.BillingRequest.Purchase} request is
 	 * received.
 	 *
 	 * @param productId		 id of the item whose purchase was requested.
@@ -37,7 +41,7 @@ class BillingObserverRegistry {
 	 */
 	static void onPurchaseIntent(@NotNull String productId, @NotNull PendingIntent purchaseIntent) {
 		for (IBillingObserver o : getSynchronizedObservers()) {
-			o.onPurchaseIntent(productId, purchaseIntent);
+			o.onPurchaseIntentOK(productId, purchaseIntent);
 		}
 	}
 

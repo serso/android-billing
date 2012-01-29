@@ -15,7 +15,6 @@
 
 package net.robotmedia.billing;
 
-import net.robotmedia.billing.requests.ResponseCode;
 import net.robotmedia.billing.model.Transaction.PurchaseState;
 import android.app.PendingIntent;
 import org.jetbrains.annotations.NotNull;
@@ -23,27 +22,27 @@ import org.jetbrains.annotations.NotNull;
 public interface IBillingObserver {
 
 	/**
-	 * Called only once after determining if in-app billing is supported or not.
+	 * Called each time
 	 *
 	 * @param supported if true, in-app billing is supported. Otherwise, it isn't.
 	 * @see BillingController#checkBillingSupported(android.content.Context)
 	 */
-	public void onBillingChecked(boolean supported);
+	public void onCheckBillingSupportedResponse(boolean supported);
 
 	/**
 	 * Called after requesting the purchase of the specified item.
 	 *
-	 * @param productId		 id of the item whose purchase was requested.
+	 * @param productId	  id of the item whose purchase was requested.
 	 * @param purchaseIntent a purchase pending intent for the specified item.
 	 * @see BillingController#requestPurchase(android.content.Context, String,
 	 *	  boolean)
 	 */
-	public void onPurchaseIntent(@NotNull String productId, @NotNull PendingIntent purchaseIntent);
+	public void onPurchaseIntentOK(@NotNull String productId, @NotNull PendingIntent purchaseIntent);
 
 	/**
 	 * Called when purchase intent was not sent due to billing service error
 	 *
-	 * @param productId id of the item whose purchase was requested
+	 * @param productId	id of the item whose purchase was requested
 	 * @param responseCode one of the failures response codes from billing service
 	 */
 	void onPurchaseIntentFailure(@NotNull String productId, @NotNull ResponseCode responseCode);
@@ -52,7 +51,7 @@ public interface IBillingObserver {
 	 * Called when the specified item is purchased, cancelled or refunded.
 	 *
 	 * @param productId id of the item whose purchase state has changed.
-	 * @param state  purchase state of the specified item.
+	 * @param state	 purchase state of the specified item.
 	 */
 	public void onPurchaseStateChanged(@NotNull String productId, @NotNull PurchaseState state);
 
@@ -61,8 +60,8 @@ public interface IBillingObserver {
 	 * This is used for reporting various errors, or if the user backed out and
 	 * didn't purchase the item.
 	 *
-	 * @param productId   id of the item whose purchase was requested
-	 * @param response response of the purchase request
+	 * @param productId id of the item whose purchase was requested
+	 * @param response  response of the purchase request
 	 */
 	public void onRequestPurchaseResponse(@NotNull String productId, @NotNull ResponseCode response);
 

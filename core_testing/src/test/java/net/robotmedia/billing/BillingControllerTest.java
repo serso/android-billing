@@ -24,7 +24,6 @@ import net.robotmedia.billing.model.BillingDBTest;
 import net.robotmedia.billing.model.Transaction;
 import net.robotmedia.billing.model.Transaction.PurchaseState;
 import net.robotmedia.billing.model.TransactionTest;
-import net.robotmedia.billing.requests.ResponseCode;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
@@ -98,11 +97,11 @@ public class BillingControllerTest extends AndroidTestCase {
 			public void onTransactionsRestored() {
 				flags.add(true);
 			}
-			public void onPurchaseIntent(@NotNull String productId, @NotNull PendingIntent purchaseIntent) {}
+			public void onPurchaseIntentOK(@NotNull String productId, @NotNull PendingIntent purchaseIntent) {}
 
 			@Override
 			public void onPurchaseIntentFailure(@NotNull String productId, @NotNull ResponseCode responseCode) {}
-			public void onBillingChecked(boolean supported) {}
+			public void onCheckBillingSupportedResponse(boolean supported) {}
 			public void onRequestPurchaseResponse(@NotNull String productId, @NotNull ResponseCode response) {}
 			public void onPurchaseStateChanged(@NotNull String productId, @NotNull PurchaseState state) {}
 		};
@@ -120,12 +119,12 @@ public class BillingControllerTest extends AndroidTestCase {
 		final IBillingObserver observer = new IBillingObserver() {
 			
 			public void onTransactionsRestored() {}
-			public void onPurchaseIntent(@NotNull String productId, @NotNull PendingIntent purchaseIntent) {}
+			public void onPurchaseIntentOK(@NotNull String productId, @NotNull PendingIntent purchaseIntent) {}
 
 			@Override
 			public void onPurchaseIntentFailure(@NotNull String productId, @NotNull ResponseCode responseCode) {}
 
-			public void onBillingChecked(boolean supported) {}
+			public void onCheckBillingSupportedResponse(boolean supported) {}
 			public void onRequestPurchaseResponse(@NotNull String productId, @NotNull ResponseCode response) {
 				flags.add(true);
 				assertEquals(testItemId, productId);

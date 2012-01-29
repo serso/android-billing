@@ -5,7 +5,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import net.robotmedia.billing.example.auxiliary.CatalogEntry.Managed;
-import net.robotmedia.billing.model.Transaction;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -17,11 +16,12 @@ import java.util.List;
  * "grayed-out" in the list and not selectable.
  */
 public class CatalogAdapter extends ArrayAdapter<String> {
-	
+
 	private CatalogEntry[] mCatalog;
 
+	// ids of already purchased products
 	@NotNull
-	private List<Transaction> mOwnedItems = new ArrayList<Transaction>();
+	private List<String> purchasedProductIds = new ArrayList<String>();
 
 	public CatalogAdapter(Context context, CatalogEntry[] catalog) {
 		super(context, android.R.layout.simple_spinner_item);
@@ -46,14 +46,9 @@ public class CatalogAdapter extends ArrayAdapter<String> {
 		view.setEnabled(isEnabled(position));
 		return view;
 	}
-	
+
 	private boolean isPurchased(@NotNull String productId) {
-		for (Transaction mOwnedItem : mOwnedItems) {
-			if (productId.equals(mOwnedItem.productId)) {
-				return true;
-			}
-		}
-		return false;
+		return purchasedProductIds.contains(productId);
 	}
 
 	@Override
@@ -67,8 +62,8 @@ public class CatalogAdapter extends ArrayAdapter<String> {
 		return true;
 	}
 
-	public void setOwnedItems(List<Transaction> ownedItems) {
-		mOwnedItems = ownedItems;
+	public void setOwnedItems(@NotNull List<String> ownedItems) {
+		purchasedProductIds = ownedItems;
 		notifyDataSetChanged();
 	}
 

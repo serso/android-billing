@@ -2,7 +2,6 @@ package net.robotmedia.billing;
 
 import android.content.Context;
 import android.content.Intent;
-import net.robotmedia.billing.requests.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -11,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
  * Date: 1/18/12
  * Time: 11:05 AM
  */
-public enum BillingResponseType {
+enum BillingResponseType {
 
 	IN_APP_NOTIFY {
 		@Override

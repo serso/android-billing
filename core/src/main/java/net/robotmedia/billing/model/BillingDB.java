@@ -23,20 +23,21 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import org.jetbrains.annotations.NotNull;
 
+// public only for tests
 public class BillingDB {
 
 	static final String DATABASE_NAME = "billing.db";
 	static final int DATABASE_VERSION = 1;
 	static final String TABLE_TRANSACTIONS = "purchases";
 
-	public static final String COLUMN__ID = "_id";
-	public static final String COLUMN_STATE = "state";
-	public static final String COLUMN_PRODUCT_ID = "productId";
-	public static final String COLUMN_PURCHASE_TIME = "purchaseTime";
-	public static final String COLUMN_DEVELOPER_PAYLOAD = "developerPayload";
+	static final String COLUMN_ID = "_id";
+	static final String COLUMN_STATE = "state";
+	static final String COLUMN_PRODUCT_ID = "productId";
+	static final String COLUMN_PURCHASE_TIME = "purchaseTime";
+	static final String COLUMN_DEVELOPER_PAYLOAD = "developerPayload";
 
 	private static final String[] TABLE_TRANSACTIONS_COLUMNS = {
-			COLUMN__ID,
+			COLUMN_ID,
 			COLUMN_PRODUCT_ID,
 			COLUMN_STATE,
 			COLUMN_PURCHASE_TIME,
@@ -61,7 +62,7 @@ public class BillingDB {
 	public void insert(@NotNull Transaction transaction) {
 		final ContentValues values = new ContentValues();
 
-		values.put(COLUMN__ID, transaction.orderId);
+		values.put(COLUMN_ID, transaction.orderId);
 		values.put(COLUMN_PRODUCT_ID, transaction.productId);
 		values.put(COLUMN_STATE, transaction.purchaseState.ordinal());
 		values.put(COLUMN_PURCHASE_TIME, transaction.purchaseTime);
@@ -112,7 +113,7 @@ public class BillingDB {
 
 		private void createTransactionsTable(@NotNull SQLiteDatabase db) {
 			db.execSQL("CREATE TABLE " + TABLE_TRANSACTIONS + "(" +
-					COLUMN__ID + " TEXT PRIMARY KEY, " +
+					COLUMN_ID + " TEXT PRIMARY KEY, " +
 					COLUMN_PRODUCT_ID + " INTEGER, " +
 					COLUMN_STATE + " TEXT, " +
 					COLUMN_PURCHASE_TIME + " TEXT, " +

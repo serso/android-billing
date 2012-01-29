@@ -10,12 +10,12 @@ import android.view.View.OnClickListener;
 import android.widget.*;
 import android.widget.AdapterView.OnItemSelectedListener;
 import net.robotmedia.billing.BillingController;
+import net.robotmedia.billing.ResponseCode;
 import net.robotmedia.billing.example.auxiliary.CatalogAdapter;
 import net.robotmedia.billing.example.auxiliary.CatalogEntry;
 import net.robotmedia.billing.helper.AbstractBillingObserver;
 import net.robotmedia.billing.model.Transaction;
 import net.robotmedia.billing.model.Transaction.PurchaseState;
-import net.robotmedia.billing.requests.ResponseCode;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -30,7 +30,10 @@ public class Dungeons extends Activity {
 	private static final String TAG = "Dungeons";
 
 	private Button mBuyButton;
-	private ListView itemsTable;
+
+	private ListView ownedItems;
+
+	private ListView allTransactions;
 
 	private static final int DIALOG_BILLING_NOT_SUPPORTED_ID = 2;
 
@@ -62,7 +65,7 @@ public class Dungeons extends Activity {
 		mBillingObserver = new AbstractBillingObserver(this) {
 
 			@Override
-			public void onBillingChecked(boolean supported) {
+			public void onCheckBillingSupportedResponse(boolean supported) {
 				Dungeons.this.onBillingChecked(supported);
 			}
 
@@ -87,7 +90,7 @@ public class Dungeons extends Activity {
 		setupWidgets();
 		BillingController.registerObserver(mBillingObserver);
 		BillingController.checkBillingSupported(this);
-		updateOwnedItems();
+		updateTransactions();
 	}
 
 	@Override
@@ -109,7 +112,7 @@ public class Dungeons extends Activity {
 	public void onPurchaseStateChanged(String productId, PurchaseState state) {
 		Log.i(TAG, "onPurchaseStateChanged() productId: " + productId + ", state: " + state);
 		Toast.makeText(this, "onPurchaseStateChanged() productId: " + productId + ", state: " + state, Toast.LENGTH_SHORT).show();
-		updateOwnedItems();
+		updateTransactions();
 	}
 
 	public void onRequestPurchaseResponse(String productId, ResponseCode response) {
@@ -156,24 +159,27 @@ public class Dungeons extends Activity {
 
 		});
 
-		itemsTable = (ListView) findViewById(R.id.owned_items);
+		ownedItems = (ListView) findViewById(R.id.owned_items);
+		allTransactions = (ListView) findViewById(R.id.all_transactions);
 	}
 
-	private void updateOwnedItems() {
+	private void updateTransactions() {
 		final List<Transaction> items = BillingController.getTransactions(this);
 
 		Toast.makeText(this, items.size() + " items found!", Toast.LENGTH_SHORT).show();
 
-		final List<Transaction> ownedItems = new ArrayList<Transaction>();
+		final List<String> ownedItems = new ArrayList<String>();
 		for (Transaction t : items) {
 			if (t.purchaseState == PurchaseState.PURCHASED) {
-				ownedItems.add(t);
+				ownedItems.add(t.productId);
 			}
 		}
 
 		Toast.makeText(this, ownedItems.size() + " purchased items found!", Toast.LENGTH_SHORT).show();
 
 		mCatalogAdapter.setOwnedItems(ownedItems);
-		itemsTable.setAdapter(new ArrayAdapter<Transaction>(this, R.layout.item_row, R.id.item_name, items));
+
+		this.ownedItems.setAdapter(new ArrayAdapter<String>(this, R.layout.item_row, R.id.item_name, ownedItems));
+		this.allTransactions.setAdapter(new ArrayAdapter<Transaction>(this, R.layout.item_row, R.id.item_name, items));
 	}
 }

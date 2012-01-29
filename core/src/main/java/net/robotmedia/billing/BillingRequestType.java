@@ -2,7 +2,6 @@ package net.robotmedia.billing;
 
 import android.content.Context;
 import android.content.Intent;
-import net.robotmedia.billing.requests.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -11,13 +10,13 @@ import org.jetbrains.annotations.Nullable;
  * Date: 1/17/12
  * Time: 1:23 PM
  */
-public enum BillingRequestType {
+enum BillingRequestType {
 
 	CHECK_BILLING_SUPPORTED {
 		@NotNull
 		@Override
 		protected BillingRequest getBillingRequest(@NotNull String packageName, @NotNull Intent intent, int startId) {
-			return new CheckBillingSupportedRequest(packageName, startId);
+			return new BillingRequest.CheckBillingSupported(packageName, startId);
 		}
 	},
 
@@ -26,7 +25,7 @@ public enum BillingRequestType {
 		@Override
 		protected BillingRequest getBillingRequest(@NotNull String packageName, @NotNull Intent intent, int startId) {
 			final String[] notifyIds = intent.getStringArrayExtra(EXTRA_NOTIFY_IDS);
-			return new ConfirmNotificationsRequest(packageName, startId, notifyIds);
+			return new BillingRequest.ConfirmNotifications(packageName, startId, notifyIds);
 		}
 	},
 
@@ -36,7 +35,7 @@ public enum BillingRequestType {
 		protected BillingRequest getBillingRequest(@NotNull String packageName, @NotNull Intent intent, int startId) {
 			final long nonce = intent.getLongExtra(EXTRA_NONCE, 0);
 			final String[] notifyIds = intent.getStringArrayExtra(EXTRA_NOTIFY_IDS);
-			return new GetPurchaseInformationRequest(packageName, startId, notifyIds, nonce);
+			return new BillingRequest.GetPurchaseInformation(packageName, startId, notifyIds, nonce);
 		}
 	},
 
@@ -46,7 +45,7 @@ public enum BillingRequestType {
 		protected BillingRequest getBillingRequest(@NotNull String packageName, @NotNull Intent intent, int startId) {
 			final String productId = intent.getStringExtra(EXTRA_ITEM_ID);
 			final String developerPayload = intent.getStringExtra(EXTRA_DEVELOPER_PAYLOAD);
-			return new RequestPurchase(packageName, startId, productId, developerPayload);
+			return new BillingRequest.Purchase(packageName, startId, productId, developerPayload);
 		}
 	},
 
@@ -55,7 +54,7 @@ public enum BillingRequestType {
 		@Override
 		protected BillingRequest getBillingRequest(@NotNull String packageName, @NotNull Intent intent, int startId) {
 			final long nonce = intent.getLongExtra(EXTRA_NONCE, 0);
-			return new RestoreTransactionsRequest(packageName, startId, nonce);
+			return new BillingRequest.RestoreTransactions(packageName, startId, nonce);
 		}
 	};
 

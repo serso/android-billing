@@ -1,8 +1,7 @@
-package net.robotmedia.billing.requests;
+package net.robotmedia.billing;
 
 import android.os.RemoteException;
 import com.android.vending.billing.IMarketBillingService;
-import net.robotmedia.billing.BillingRequestType;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -10,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
  * Date: 1/17/12
  * Time: 1:06 PM
  */
-public interface IBillingRequest {
+interface IBillingRequest {
 
 	long run(@NotNull IMarketBillingService service) throws RemoteException;
 

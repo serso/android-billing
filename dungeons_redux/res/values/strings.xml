@@ -39,4 +39,5 @@
     <string name="android_test_purchased">android.test.purchased</string>
     <string name="android_test_item_unavailable">android.test.item unavailable</string>
     <string name="android_test_refunded">android.test.refunded</string>
+	<string name="all_transactions">All transactions</string>
 </resources>
