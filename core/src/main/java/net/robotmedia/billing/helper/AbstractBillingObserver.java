@@ -42,6 +42,10 @@ public abstract class AbstractBillingObserver implements IBillingObserver {
 	}
 
 	public boolean isTransactionsRestored() {
+		return isTransactionsRestored(activity);
+	}
+
+	public static boolean isTransactionsRestored(@NotNull Activity activity) {
 		final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(activity);
 		return preferences.getBoolean(KEY_TRANSACTIONS_RESTORED, false);
 	}
