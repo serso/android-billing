@@ -291,9 +291,12 @@ abstract class BillingRequest implements IBillingRequest {
 		@Override
 		public void onResponseCode(@NotNull ResponseCode response) {
 			super.onResponseCode(response);
+
 			if (response == ResponseCode.RESULT_OK) {
-				BillingController.onTransactionsRestored();
-			}
+    			BillingController.onTransactionsRestored();
+    		} else {
+    			BillingController.onErrorRestoreTransactions(response);
+    		}
 		}
 
 	}

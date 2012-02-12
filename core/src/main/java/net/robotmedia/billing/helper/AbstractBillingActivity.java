@@ -65,6 +65,11 @@ public abstract class AbstractBillingActivity extends Activity implements Billin
 			public void onRequestPurchaseResponse(@NotNull String productId, @NotNull ResponseCode response) {
 				AbstractBillingActivity.this.onRequestPurchaseResponse(productId, response);
 			}
+
+			@Override
+			public void onErrorRestoreTransactions(@NotNull ResponseCode responseCode) {
+				// ignore errors when restoring transactions
+			}
 		};
 		BillingController.registerObserver(mBillingObserver);
 		BillingController.setConfiguration(this); // This activity will provide

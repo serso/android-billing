@@ -111,4 +111,10 @@ class BillingObserverRegistry {
 			o.onPurchaseIntentFailure(productId, responseCode);
 		}
 	}
+
+	public static void onErrorRestoreTransactions(@NotNull ResponseCode response) {
+		for (IBillingObserver o : getSynchronizedObservers()) {
+			o.onErrorRestoreTransactions(response);
+		}
+	}
 }

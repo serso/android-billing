@@ -573,6 +573,10 @@ public class BillingController {
 		BillingObserverRegistry.onTransactionsRestored();
 	}
 
+	static void onErrorRestoreTransactions(@NotNull ResponseCode response) {
+		BillingObserverRegistry.onErrorRestoreTransactions(response);
+	}
+
 	public static void registerObserver(@NotNull IBillingObserver billingObserver) {
 		BillingObserverRegistry.registerObserver(billingObserver);
 	}

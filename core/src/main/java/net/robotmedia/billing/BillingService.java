@@ -41,6 +41,8 @@ public class BillingService extends Service implements ServiceConnection, IBilli
 	@NotNull
 	private static final List<IBillingRequest> pendingRequests = new LinkedList<IBillingRequest>();
 
+	private static final int MAX_RETRIES = 3;
+
 	@Nullable
 	private static IMarketBillingService service;
 
@@ -152,7 +154,7 @@ public class BillingService extends Service implements ServiceConnection, IBilli
 
 				// if service was disconnected during procedure => connect
 				if (service != null) {
-					runRequest(service, request);
+					runRequest(service, request, 1);
 					it.remove();
 
 					maxStartId = Math.max(maxStartId, request.getStartId());
@@ -171,15 +173,18 @@ public class BillingService extends Service implements ServiceConnection, IBilli
 		return true;
 	}
 
-	private boolean runRequest(@NotNull IMarketBillingService service, @NotNull IBillingRequest request) {
+	private boolean runRequest(@NotNull IMarketBillingService service, @NotNull IBillingRequest request, int counter) {
 		try {
 			final long requestId = request.run(service);
 			BillingController.onRequestSent(requestId, request);
 			return true;
 		} catch (RemoteException e) {
 			Log.w(this.getClass().getSimpleName(), "Remote billing service crashed");
-			// TODO: Retry?
-			return false;
+			if (counter < MAX_RETRIES) {
+				return runRequest(service, request, counter + 1);
+			} else {
+				return false;
+			}
 		}
 	}
 

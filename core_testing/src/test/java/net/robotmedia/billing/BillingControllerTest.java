@@ -104,6 +104,8 @@ public class BillingControllerTest extends AndroidTestCase {
 			public void onCheckBillingSupportedResponse(boolean supported) {}
 			public void onRequestPurchaseResponse(@NotNull String productId, @NotNull ResponseCode response) {}
 			public void onPurchaseStateChanged(@NotNull String productId, @NotNull PurchaseState state) {}
+			public void onErrorRestoreTransactions(@NotNull ResponseCode responseCode) {}
+			
 		};
 		BillingController.registerObserver(observer);
 		BillingController.onTransactionsRestored();
@@ -132,6 +134,8 @@ public class BillingControllerTest extends AndroidTestCase {
 			}
 			@Override
 			public void onPurchaseStateChanged(@NotNull String productId, @NotNull PurchaseState state) {}
+			public void onErrorRestoreTransactions(@NotNull ResponseCode responseCode) {}
+			
 		};
 		BillingController.registerObserver(observer);
 		BillingController.onRequestPurchaseResponse(testItemId, testResponse);
