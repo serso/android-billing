@@ -475,6 +475,8 @@ public class BillingController {
 	 * @param context context
 	 */
 	public static void restoreTransactions(@NotNull Context context) {
+		Log.d(BillingController.class.getSimpleName(), "Restoring transactions...");
+
 		final long nonce = Security.generateNonce();
 		BillingService.restoreTransactions(context, nonce);
 	}
@@ -555,6 +557,11 @@ public class BillingController {
 		} else {
 			return false;
 		}
+	}
+
+	public static void dropBillingData(@NotNull Context context) {
+		Log.d(BillingController.class.getSimpleName(), "Dropping billing database...");
+		TransactionManager.dropDatabase(context);
 	}
 
 	static void onRequestPurchaseResponse(@NotNull String productId, @NotNull ResponseCode response) {

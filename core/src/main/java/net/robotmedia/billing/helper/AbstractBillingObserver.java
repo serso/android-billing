@@ -17,6 +17,7 @@ package net.robotmedia.billing.helper;
 
 import android.app.Activity;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.preference.PreferenceManager;
@@ -33,7 +34,7 @@ import org.jetbrains.annotations.NotNull;
  */
 public abstract class AbstractBillingObserver implements IBillingObserver {
 
-	protected static final String KEY_TRANSACTIONS_RESTORED = "net.robotmedia.billing.transactionsRestored";
+	public static final String KEY_TRANSACTIONS_RESTORED = "net.robotmedia.billing.transactionsRestored";
 
 	protected Activity activity;
 
@@ -45,8 +46,8 @@ public abstract class AbstractBillingObserver implements IBillingObserver {
 		return isTransactionsRestored(activity);
 	}
 
-	public static boolean isTransactionsRestored(@NotNull Activity activity) {
-		final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(activity);
+	public static boolean isTransactionsRestored(@NotNull Context context) {
+		final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
 		return preferences.getBoolean(KEY_TRANSACTIONS_RESTORED, false);
 	}
 

@@ -26,6 +26,10 @@ import java.util.List;
 
 public class TransactionManager {
 
+	public synchronized static void dropDatabase(@NotNull Context context) {
+		context.deleteDatabase(BillingDB.DATABASE_NAME);
+	}
+
 	public synchronized static void addTransaction(@NotNull Context context, @NotNull Transaction transaction) {
 		final BillingDB db = new BillingDB(context);
 		try {
