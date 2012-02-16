@@ -8,14 +8,13 @@
 	<groupId>org.solovyev.android</groupId>
 	<artifactId>billing</artifactId>
 	<version>0.1</version>
+	<packaging>jar</packaging>
 
 	<parent>
 		<groupId>org.solovyev.android</groupId>
 		<artifactId>billing-parent</artifactId>
 		<version>0.1</version>
 	</parent>
-
-	<packaging>pom</packaging>
 
 	<properties>
 		<additionalLibs>${basedir}/src/misc/lib</additionalLibs>

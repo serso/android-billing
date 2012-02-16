@@ -355,9 +355,6 @@ public class BillingController {
 						addManualConfirmation(transaction.productId, transaction.notificationId);
 					}
 				}
-			} else {
-				// TODO: Discriminate between purchases, cancellations and refunds.
-				addManualConfirmation(transaction.productId, transaction.notificationId);
 			}
 
 			storeTransaction(context, transaction);
