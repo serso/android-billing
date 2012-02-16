@@ -56,6 +56,7 @@ public class BillingDB {
 	}
 
 	public void close() {
+		db.close();
 		databaseHelper.close();
 	}
 
