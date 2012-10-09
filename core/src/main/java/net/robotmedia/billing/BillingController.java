@@ -15,7 +15,6 @@
 
 package net.robotmedia.billing;
 
-import android.app.Activity;
 import android.app.PendingIntent;
 import android.app.PendingIntent.CanceledException;
 import android.content.Context;
@@ -524,7 +523,7 @@ public class BillingController {
 	public static void startPurchaseIntent(@NotNull Context context,
 										   @NotNull PendingIntent purchaseIntent,
 										   @Nullable Intent intent) {
-		if (Compatibility.isStartIntentSenderSupported()) {
+		if (Compatibility.isStartIntentSenderSupported(context)) {
 			// This is on Android 2.0 and beyond. The in-app buy page activity
 			// must be on the activity stack of the application.
 			Compatibility.startIntentSender(context, purchaseIntent.getIntentSender(), intent);

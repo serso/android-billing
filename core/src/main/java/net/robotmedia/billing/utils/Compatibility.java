@@ -30,7 +30,10 @@ import java.lang.reflect.Method;
 public class Compatibility {
 
     @Nullable
-	private static Method startIntentSender;
+	private static Method activityMethod;
+
+    @Nullable
+    private static Method contextMethod;
 
 	public static int START_NOT_STICKY;
 
@@ -49,36 +52,61 @@ public class Compatibility {
 			START_NOT_STICKY = 2;
 		}
 
-		try {
-			startIntentSender = Activity.class.getMethod("startIntentSender", START_INTENT_SENDER_SIGNATURE);
-		} catch (SecurityException e) {
-			startIntentSender = null;
-		} catch (NoSuchMethodException e) {
-			startIntentSender = null;
-		}
+        activityMethod = initMethod(Activity.class);
+        contextMethod = initMethod(Context.class);
 	}
 
-	public static void startIntentSender(@NotNull Context context,
+    @Nullable
+    private static Method initMethod(@NotNull Class<? extends Context> clazz) {
+        Method result;
+
+        try {
+            result = clazz.getMethod("startIntentSender", START_INTENT_SENDER_SIGNATURE);
+        } catch (SecurityException e) {
+            result = null;
+        } catch (NoSuchMethodException e) {
+            result = null;
+        }
+
+        return result;
+    }
+
+    public static void startIntentSender(@NotNull Context context,
 										 @NotNull IntentSender intentSender,
 										 @Nullable Intent intent) {
-		if (startIntentSender != null) {
+        if (context instanceof Activity) {
+            startIntentSender0(context, intentSender, intent, activityMethod);
+        } else {
+            startIntentSender0(context, intentSender, intent, contextMethod);
+        }
+    }
 
-			final Object[] args = new Object[5];
-			args[0] = intentSender;
-			args[1] = intent;
-			args[2] = 0;
-			args[3] = 0;
-			args[4] = 0;
+    private static void startIntentSender0(@NotNull Context context,
+                                           @NotNull IntentSender intentSender,
+                                           @Nullable Intent intent,
+                                           @Nullable Method method) {
+        if (method != null) {
 
-			try {
-				startIntentSender.invoke(context, args);
-			} catch (Exception e) {
-				Log.e(Compatibility.class.getSimpleName(), "startIntentSender", e);
-			}
-		}
-	}
+            final Object[] args = new Object[5];
+            args[0] = intentSender;
+            args[1] = intent;
+            args[2] = 0;
+            args[3] = 0;
+            args[4] = 0;
 
-	public static boolean isStartIntentSenderSupported() {
-		return startIntentSender != null;
-	}
+            try {
+                method.invoke(context, args);
+            } catch (Exception e) {
+                Log.e(Compatibility.class.getSimpleName(), "startIntentSender", e);
+            }
+        }
+    }
+
+    public static boolean isStartIntentSenderSupported(@NotNull Context context) {
+        if (context instanceof Activity) {
+            return activityMethod != null;
+        } else {
+            return contextMethod != null;
+        }
+    }
 }
