@@ -17,6 +17,7 @@ package net.robotmedia.billing.utils;
 
 import android.app.Activity;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.util.Log;
@@ -28,13 +29,13 @@ import java.lang.reflect.Method;
 
 public class Compatibility {
 
+    @Nullable
 	private static Method startIntentSender;
+
 	public static int START_NOT_STICKY;
 
 	@SuppressWarnings("rawtypes")
-	private static final Class[] START_INTENT_SENDER_SIG = new Class[]{
-			IntentSender.class, Intent.class, int.class, int.class, int.class
-	};
+	private static final Class[] START_INTENT_SENDER_SIGNATURE = new Class[]{IntentSender.class, Intent.class, int.class, int.class, int.class};
 
 	static {
 		initCompatibility();
@@ -49,7 +50,7 @@ public class Compatibility {
 		}
 
 		try {
-			startIntentSender = Activity.class.getMethod("startIntentSender", START_INTENT_SENDER_SIG);
+			startIntentSender = Activity.class.getMethod("startIntentSender", START_INTENT_SENDER_SIGNATURE);
 		} catch (SecurityException e) {
 			startIntentSender = null;
 		} catch (NoSuchMethodException e) {
@@ -57,7 +58,7 @@ public class Compatibility {
 		}
 	}
 
-	public static void startIntentSender(@NotNull Activity activity,
+	public static void startIntentSender(@NotNull Context context,
 										 @NotNull IntentSender intentSender,
 										 @Nullable Intent intent) {
 		if (startIntentSender != null) {
@@ -70,7 +71,7 @@ public class Compatibility {
 			args[4] = 0;
 
 			try {
-				startIntentSender.invoke(activity, args);
+				startIntentSender.invoke(context, args);
 			} catch (Exception e) {
 				Log.e(Compatibility.class.getSimpleName(), "startIntentSender", e);
 			}
