@@ -2,6 +2,7 @@ package net.robotmedia.billing.helper;
 
 import android.app.Activity;
 import android.app.PendingIntent;
+import android.content.Context;
 import net.robotmedia.billing.IBillingObserver;
 import net.robotmedia.billing.ResponseCode;
 import net.robotmedia.billing.model.Transaction;
@@ -18,8 +19,8 @@ public class DefaultBillingObserver extends AbstractBillingObserver {
     @Nullable
     private final IBillingObserver nestedBillingObserver;
 
-    public DefaultBillingObserver(@NotNull Activity activity, @Nullable IBillingObserver nestedBillingObserver) {
-        super(activity);
+    public DefaultBillingObserver(@NotNull Context context, @Nullable IBillingObserver nestedBillingObserver) {
+        super(context);
         this.nestedBillingObserver = nestedBillingObserver;
     }
 
