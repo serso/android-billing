@@ -39,8 +39,9 @@ public class Compatibility {
 
 	@SuppressWarnings("rawtypes")
 	private static final Class[] START_INTENT_SENDER_SIGNATURE = new Class[]{IntentSender.class, Intent.class, int.class, int.class, int.class};
+    private static final String TAG = "BillingCompatibility";
 
-	static {
+    static {
 		initCompatibility();
 	}
 
@@ -49,6 +50,7 @@ public class Compatibility {
 			final Field field = Service.class.getField("START_NOT_STICKY");
 			START_NOT_STICKY = field.getInt(null);
 		} catch (Exception e) {
+            Log.e(TAG, e.getMessage(), e);
 			START_NOT_STICKY = 2;
 		}
 
@@ -63,8 +65,10 @@ public class Compatibility {
         try {
             result = clazz.getMethod("startIntentSender", START_INTENT_SENDER_SIGNATURE);
         } catch (SecurityException e) {
+            Log.e(TAG, e.getMessage(), e);
             result = null;
         } catch (NoSuchMethodException e) {
+            Log.e(TAG, e.getMessage(), e);
             result = null;
         }
 
@@ -97,7 +101,7 @@ public class Compatibility {
             try {
                 method.invoke(context, args);
             } catch (Exception e) {
-                Log.e(Compatibility.class.getSimpleName(), "startIntentSender", e);
+                Log.e(TAG, "startIntentSender", e);
             }
         }
     }

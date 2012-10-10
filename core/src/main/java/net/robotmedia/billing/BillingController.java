@@ -495,7 +495,11 @@ public class BillingController {
 		BillingController.debug = debug;
 	}
 
-	/**
+    public static boolean isDebug() {
+        return debug;
+    }
+
+    /**
 	 * Sets a custom signature validator. If no custom signature validator is
 	 * provided,
 	 * {@link net.robotmedia.billing.security.DefaultSignatureValidator} will

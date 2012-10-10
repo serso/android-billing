@@ -35,6 +35,9 @@ import java.util.List;
 
 public class BillingService extends Service implements ServiceConnection, IBillingService {
 
+    @NotNull
+    private static final String TAG = BillingService.class.getSimpleName();
+
 	private static final String ACTION_MARKET_BILLING_SERVICE = "com.android.vending.billing.MarketBillingService.BIND";
 
 	// all operations must be synchronized
@@ -175,10 +178,16 @@ public class BillingService extends Service implements ServiceConnection, IBilli
 
 	private boolean runRequest(@NotNull IMarketBillingService service, @NotNull IBillingRequest request, int counter) {
 		try {
+            BillingController.debug("Running request: " + request.getRequestType());
+
 			final long requestId = request.run(service);
+
 			BillingController.onRequestSent(requestId, request);
+
 			return true;
 		} catch (RemoteException e) {
+            BillingController.debug("Remote exception: " + e.getMessage());
+
 			Log.w(this.getClass().getSimpleName(), "Remote billing service crashed");
 			if (counter < MAX_RETRIES) {
 				return runRequest(service, request, counter + 1);
