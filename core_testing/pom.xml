@@ -15,7 +15,7 @@
 		<version>0.2</version>
 	</parent>
 
-	<packaging>apk</packaging>
+	<packaging>pom</packaging>
 
 	<properties>
 		<additionalLibs>${basedir}/src/misc/lib</additionalLibs>
