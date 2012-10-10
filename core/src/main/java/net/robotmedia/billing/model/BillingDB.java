@@ -15,6 +15,7 @@
 
 package net.robotmedia.billing.model;
 
+import android.app.Application;
 import net.robotmedia.billing.model.Transaction.PurchaseState;
 import android.content.ContentValues;
 import android.content.Context;
@@ -22,6 +23,13 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.solovyev.android.db.AndroidDbUtils;
+import org.solovyev.android.db.DbExec;
+import org.solovyev.android.db.DbQuery;
+
+import java.util.ArrayList;
+import java.util.List;
 
 // public only for tests
 public class BillingDB {
@@ -36,7 +44,7 @@ public class BillingDB {
 	static final String COLUMN_PURCHASE_TIME = "purchaseTime";
 	static final String COLUMN_DEVELOPER_PAYLOAD = "developerPayload";
 
-	private static final String[] TABLE_TRANSACTIONS_COLUMNS = {
+	static final String[] TABLE_TRANSACTIONS_COLUMNS = {
 			COLUMN_ID,
 			COLUMN_PRODUCT_ID,
 			COLUMN_STATE,
@@ -57,13 +65,24 @@ public class BillingDB {
 		db = databaseHelper.getWritableDatabase();
 	}
 
+	public static void init(@NotNull Application application) {
+		instance = new BillingDB(application);
+	}
+
 	@NotNull
-	public static synchronized BillingDB getInstance(@NotNull Context context) {
-		if (instance == null) {
-			instance = new BillingDB(context);
+	public static BillingDB getInstance() {
+		return instance;
+	}
+
+	@NotNull
+	private static List<Transaction> getTransactionsFromCursor(@NotNull final Cursor cursor) {
+		final List<Transaction> result = new ArrayList<Transaction>();
+
+		while (cursor.moveToNext()) {
+			result.add(createTransaction(cursor));
 		}
 
-		return instance;
+		return result;
 	}
 
 	public void close() {
@@ -73,31 +92,7 @@ public class BillingDB {
 	}
 
 	public void insert(@NotNull Transaction transaction) {
-		final ContentValues values = new ContentValues();
-
-		values.put(COLUMN_ID, transaction.orderId);
-		values.put(COLUMN_PRODUCT_ID, transaction.productId);
-		values.put(COLUMN_STATE, transaction.purchaseState.ordinal());
-		values.put(COLUMN_PURCHASE_TIME, transaction.purchaseTime);
-		values.put(COLUMN_DEVELOPER_PAYLOAD, transaction.developerPayload);
-
-		db.replace(TABLE_TRANSACTIONS, null /* nullColumnHack */, values);
-	}
-
-	@NotNull
-	Cursor getAllTransactionsQuery() {
-		return db.query(TABLE_TRANSACTIONS, TABLE_TRANSACTIONS_COLUMNS, null, null, null, null, null);
-	}
-
-	@NotNull
-	Cursor getTransactionsQuery(@NotNull String productId) {
-		return db.query(TABLE_TRANSACTIONS, TABLE_TRANSACTIONS_COLUMNS, COLUMN_PRODUCT_ID + " = ?", new String[]{productId}, null, null, null);
-	}
-
-	@NotNull
-	Cursor getTransactionsQuery(@NotNull String productId, @NotNull PurchaseState state) {
-		return db.query(TABLE_TRANSACTIONS, TABLE_TRANSACTIONS_COLUMNS, COLUMN_PRODUCT_ID + " = ? AND " + COLUMN_STATE + " = ?",
-				new String[]{productId, String.valueOf(state.ordinal())}, null, null, null);
+		AndroidDbUtils.doDbExec(this.getDatabaseHelper(), new InsertTransaction(transaction));
 	}
 
 	@NotNull
@@ -111,6 +106,54 @@ public class BillingDB {
 		purchase.developerPayload = cursor.getString(4);
 
 		return purchase;
+	}
+
+	static class CountPurchases implements DbQuery<Integer> {
+
+		@NotNull
+		private final String productId;
+
+		public CountPurchases(@NotNull String productId) {
+			this.productId = productId;
+		}
+
+		@NotNull
+		@Override
+		public Cursor createCursor(@NotNull SQLiteDatabase db) {
+			return db.query(TABLE_TRANSACTIONS, TABLE_TRANSACTIONS_COLUMNS, COLUMN_PRODUCT_ID + " = ? AND " + COLUMN_STATE + " = ?", new String[]{productId, String.valueOf(PurchaseState.PURCHASED.ordinal())}, null, null, null);
+		}
+
+		@NotNull
+		@Override
+		public Integer retrieveData(@NotNull Cursor cursor) {
+			return cursor.getCount();
+		}
+	}
+
+	static class TransactionsByProductId implements DbQuery<List<Transaction>> {
+
+		@Nullable
+		private final String productId;
+
+		public TransactionsByProductId(@Nullable String productId) {
+			this.productId = productId;
+		}
+
+		@NotNull
+		@Override
+		public Cursor createCursor(@NotNull SQLiteDatabase db) {
+			if (productId != null) {
+				return db.query(TABLE_TRANSACTIONS, TABLE_TRANSACTIONS_COLUMNS, COLUMN_PRODUCT_ID + " = ?", new String[]{productId}, null, null, null);
+			} else {
+				return db.query(TABLE_TRANSACTIONS, TABLE_TRANSACTIONS_COLUMNS, null, null, null, null, null);
+			}
+		}
+
+		@NotNull
+		@Override
+		public List<Transaction> retrieveData(@NotNull Cursor cursor) {
+			return getTransactionsFromCursor(cursor);
+		}
 	}
 
 	private class DatabaseHelper extends SQLiteOpenHelper {
@@ -135,6 +178,34 @@ public class BillingDB {
 
 		@Override
 		public void onUpgrade(@NotNull SQLiteDatabase db, int oldVersion, int newVersion) {
+		}
+	}
+
+	@NotNull
+	public DatabaseHelper getDatabaseHelper() {
+		return databaseHelper;
+	}
+
+	static class InsertTransaction implements DbExec {
+
+		@NotNull
+		private final Transaction transaction;
+
+		InsertTransaction(@NotNull Transaction transaction) {
+			this.transaction = transaction;
+		}
+
+		@Override
+		public void exec(@NotNull SQLiteDatabase db) {
+			final ContentValues values = new ContentValues();
+
+			values.put(COLUMN_ID, transaction.orderId);
+			values.put(COLUMN_PRODUCT_ID, transaction.productId);
+			values.put(COLUMN_STATE, transaction.purchaseState.ordinal());
+			values.put(COLUMN_PURCHASE_TIME, transaction.purchaseTime);
+			values.put(COLUMN_DEVELOPER_PAYLOAD, transaction.developerPayload);
+
+			db.replace(TABLE_TRANSACTIONS, null /* nullColumnHack */, values);
 		}
 	}
 }

@@ -7,7 +7,7 @@
 
 	<groupId>org.solovyev.android</groupId>
 	<artifactId>billing-parent</artifactId>
-	<version>0.1</version>
+	<version>0.2</version>
 
 	<modules>
 		<module>core</module>
@@ -19,47 +19,263 @@
 
 	<properties>
 		<additionalLibs>${basedir}/src/misc/lib</additionalLibs>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
-	<dependencies>
+	<dependencyManagement>
+		<dependencies>
 
-		<dependency>
-			<groupId>com.google.android</groupId>
-			<artifactId>android</artifactId>
-			<version>2.3.1</version>
-			<scope>provided</scope>
-		</dependency>
+			<dependency>
+				<groupId>org.solovyev</groupId>
+				<artifactId>common-core</artifactId>
+				<version>1.0.0</version>
+			</dependency>
 
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.8.2</version>
-			<scope>test</scope>
-		</dependency>
+			<dependency>
+				<groupId>org.solovyev</groupId>
+				<artifactId>common-text</artifactId>
+				<version>1.0.1</version>
+			</dependency>
 
-		<dependency>
-			<groupId>com.intellij</groupId>
-			<artifactId>annotations</artifactId>
-			<version>7.0.3</version>
-		</dependency>
+			<dependency>
+				<groupId>org.solovyev.android</groupId>
+				<artifactId>android-common-core</artifactId>
+				<type>apklib</type>
+				<version>1.0.0</version>
+			</dependency>
 
-	</dependencies>
+			<dependency>
+				<groupId>org.solovyev.android</groupId>
+				<artifactId>android-common-ads</artifactId>
+				<type>apklib</type>
+				<version>1.0.0</version>
+			</dependency>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>2.1.2</version>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
+			<dependency>
+				<groupId>org.solovyev.android</groupId>
+				<artifactId>android-common-view</artifactId>
+				<type>apklib</type>
+				<version>1.0.0</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.solovyev.android</groupId>
+				<artifactId>android-common-preferences</artifactId>
+				<type>apklib</type>
+				<version>1.0.0</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.solovyev.android</groupId>
+				<artifactId>android-common-menu</artifactId>
+				<type>apklib</type>
+				<version>1.0.0</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.solovyev.android</groupId>
+				<artifactId>android-common-sherlock</artifactId>
+				<version>1.0.0</version>
+				<type>apklib</type>
+			</dependency>
+
+			<dependency>
+				<groupId>com.actionbarsherlock</groupId>
+				<artifactId>library</artifactId>
+				<version>4.1.0</version>
+				<type>apklib</type>
+			</dependency>
+
+			<dependency>
+				<groupId>org.solovyev</groupId>
+				<artifactId>jscl</artifactId>
+				<version>0.0.3</version>
+				<exclusions>
+					<exclusion>
+						<artifactId>xercesImpl</artifactId>
+						<groupId>xerces</groupId>
+					</exclusion>
+
+					<exclusion>
+						<groupId>jgraphx</groupId>
+						<artifactId>jgraphx</artifactId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+
+			<dependency>
+				<groupId>org.solovyev.android</groupId>
+				<artifactId>android-common-other</artifactId>
+				<type>apklib</type>
+				<version>1.0.0</version>
+			</dependency>
+
+			<dependency>
+				<groupId>junit</groupId>
+				<artifactId>junit</artifactId>
+				<version>4.8.2</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.intellij</groupId>
+				<artifactId>annotations</artifactId>
+				<version>7.0.3</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.google.android</groupId>
+				<artifactId>android</artifactId>
+				<version>4.0.1.2</version>
+				<scope>provided</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>com.google.android</groupId>
+				<artifactId>support-v4</artifactId>
+				<version>r7</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.google.android</groupId>
+				<artifactId>android-test</artifactId>
+				<version>2.3.1</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.google.guava</groupId>
+				<artifactId>guava</artifactId>
+				<version>11.0.2</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.simpleframework</groupId>
+				<artifactId>simple-xml</artifactId>
+				<version>2.6.1</version>
+				<exclusions>
+					<exclusion>
+						<artifactId>stax-api</artifactId>
+						<groupId>stax</groupId>
+					</exclusion>
+					<exclusion>
+						<artifactId>xpp3</artifactId>
+						<groupId>xpp3</groupId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+
+		</dependencies>
+	</dependencyManagement>
+
+	<build>
+
+		<plugins>
+
+			<plugin>
+				<groupId>com.electriccloud</groupId>
+				<artifactId>javac2-maven-plugin</artifactId>
+				<version>1.0.1</version>
+				<executions>
+					<execution>
+						<id>@NotNull Instrumentation</id>
+						<goals>
+							<goal>instrument</goal>
+						</goals>
+						<!--compile phase instead of process-classes because of proguard.
+												@NotNull instrumentation will be done now after compilation and before proguard-->
+						<phase>compile</phase>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- as some classes are singletons we must run  each test in separate JVM-->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.12.3</version>
+				<configuration>
+					<forkMode>perTest</forkMode>
+				</configuration>
+			</plugin>
+
+		</plugins>
+
+		<pluginManagement>
+			<plugins>
+
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-jarsigner-plugin</artifactId>
+					<version>1.2</version>
+				</plugin>
+
+				<plugin>
+					<groupId>com.jayway.maven.plugins.android.generation2</groupId>
+					<artifactId>android-maven-plugin</artifactId>
+					<version>3.1.1</version>
+					<configuration>
+
+						<sourceDirectories>
+							<sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
+						</sourceDirectories>
+
+						<sdk>
+							<platform>15</platform>
+						</sdk>
+
+						<emulator>
+							<avd>23</avd>
+							<wait>10000</wait>
+							<!--<options>-no-skin</options>-->
+						</emulator>
+
+						<zipalign>
+							<verbose>true</verbose>
+						</zipalign>
+
+						<undeployBeforeDeploy>true</undeployBeforeDeploy>
+
+					</configuration>
+
+				</plugin>
+
+				<plugin>
+					<groupId>com.pyx4me</groupId>
+					<artifactId>proguard-maven-plugin</artifactId>
+					<version>2.0.4</version>
+				</plugin>
+
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>build-helper-maven-plugin</artifactId>
+					<version>1.5</version>
+				</plugin>
+
+			</plugins>
+		</pluginManagement>
+
+	</build>
+
+	<profiles>
+
+		<profile>
+			<!-- the standard profile runs instrumentation tests  -->
+			<id>standard</id>
+		</profile>
+
+		<profile>
+			<!-- the release profile does sign, proguard, zipalign  -->
+			<id>release</id>
+			<!-- via this activation the profile is automatically used when the release is done with the maven release
+						plugin -->
+			<activation>
+				<property>
+					<name>performRelease</name>
+					<value>true</value>
+				</property>
+			</activation>
+
+		</profile>
+	</profiles>
+
+
 </project>

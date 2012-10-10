@@ -195,7 +195,7 @@ public class BillingController {
 
 		// item id != null => obfuscatedItemId != null
 		assert obfuscatedItemId != null;
-		return TransactionManager.countPurchases(context, obfuscatedItemId);
+		return TransactionManager.countPurchases(obfuscatedItemId);
 	}
 
 	protected static void debug(@Nullable String message) {
@@ -242,7 +242,7 @@ public class BillingController {
 	 */
 	@NotNull
 	public static List<Transaction> getTransactions(@NotNull Context context) {
-		final List<Transaction> transactions = TransactionManager.getTransactions(context);
+		final List<Transaction> transactions = TransactionManager.getTransactions();
 		ObfuscateUtils.unobfuscate(context, transactions, getSalt());
 		return transactions;
 	}
@@ -262,7 +262,7 @@ public class BillingController {
 
 		assert obfuscatedItemId != null;
 
-		final List<Transaction> transactions = TransactionManager.getTransactions(context, obfuscatedItemId);
+		final List<Transaction> transactions = TransactionManager.getTransactions(obfuscatedItemId);
 		ObfuscateUtils.unobfuscate(context, transactions, salt);
 
 		return transactions;
@@ -283,7 +283,7 @@ public class BillingController {
 		final String obfuscatedItemId = Security.obfuscate(context, salt, productId);
 
 		assert obfuscatedItemId != null;
-		return TransactionManager.isPurchased(context, obfuscatedItemId);
+		return TransactionManager.isPurchased(obfuscatedItemId);
 	}
 
 	/**
@@ -542,7 +542,7 @@ public class BillingController {
 	static void storeTransaction(@NotNull Context context, @NotNull Transaction t) {
 		final Transaction clone = t.clone();
 		ObfuscateUtils.obfuscate(context, clone, getSalt());
-		TransactionManager.addTransaction(context, clone);
+		TransactionManager.addTransaction(clone);
 	}
 
 	private static boolean verifyNonce(@NotNull JSONObject data) {

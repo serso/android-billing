@@ -7,33 +7,47 @@
 
 	<groupId>org.solovyev.android</groupId>
 	<artifactId>billing</artifactId>
-	<version>0.1</version>
-	<!--<packaging>apklib</packaging>-->
+	<version>0.2</version>
+	<packaging>apklib</packaging>
 
 	<parent>
 		<groupId>org.solovyev.android</groupId>
 		<artifactId>billing-parent</artifactId>
-		<version>0.1</version>
+		<version>0.2</version>
 	</parent>
 
 	<properties>
 		<additionalLibs>${basedir}/src/misc/lib</additionalLibs>
 	</properties>
 
+	<dependencies>
+
+		<dependency>
+			<groupId>org.solovyev.android</groupId>
+			<artifactId>android-common-db</artifactId>
+			<version>1.0.0</version>
+			<type>apklib</type>
+		</dependency>
+
+		<dependency>
+			<groupId>com.google.android</groupId>
+			<artifactId>android</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
+	</dependencies>
+
 	<build>
 
-		<plugins>
-
-			<plugin>
+		<extensions>
+			<extension>
 				<groupId>com.jayway.maven.plugins.android.generation2</groupId>
 				<artifactId>android-maven-plugin</artifactId>
-				<version>3.1.1</version>
+			</extension>
+		</extensions>
 
-				<extensions>true</extensions>
-			</plugin>
-
-		</plugins>
 	</build>
+
 
 
 </project>
