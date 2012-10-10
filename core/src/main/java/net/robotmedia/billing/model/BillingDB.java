@@ -50,14 +50,26 @@ public class BillingDB {
 	// NOTE: package protected for tests - should not be used directly
 	final DatabaseHelper databaseHelper;
 
-	public BillingDB(@NotNull Context context) {
+	private static volatile BillingDB instance;
+
+	private BillingDB(@NotNull Context context) {
 		databaseHelper = new DatabaseHelper(context);
 		db = databaseHelper.getWritableDatabase();
 	}
 
+	@NotNull
+	public static synchronized BillingDB getInstance(@NotNull Context context) {
+		if (instance == null) {
+			instance = new BillingDB(context);
+		}
+
+		return instance;
+	}
+
 	public void close() {
-		db.close();
-		databaseHelper.close();
+		// database should never be closed
+		//db.close();
+		//databaseHelper.close();
 	}
 
 	public void insert(@NotNull Transaction transaction) {

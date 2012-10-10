@@ -31,7 +31,7 @@ public class TransactionManager {
 	}
 
 	public synchronized static void addTransaction(@NotNull Context context, @NotNull Transaction transaction) {
-		final BillingDB db = new BillingDB(context);
+		final BillingDB db = BillingDB.getInstance(context);
 		try {
 			db.insert(transaction);
 		} finally {
@@ -132,7 +132,7 @@ public class TransactionManager {
 		BillingDB db = null;
 		try {
 			// open database
-			db = new BillingDB(context);
+			db = BillingDB.getInstance(context);
 
 			Cursor cursor = null;
 			try {
