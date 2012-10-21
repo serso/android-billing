@@ -3,11 +3,17 @@
 		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-	<modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>7</version>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.solovyev.android</groupId>
 	<artifactId>billing-parent</artifactId>
-	<version>0.2</version>
+	<version>1.0.0</version>
 
 	<modules>
 		<module>core</module>
@@ -16,6 +22,12 @@
 	</modules>
 
 	<packaging>pom</packaging>
+
+    <scm>
+        <connection>scm:git:git@github.com:serso/android-billing.git</connection>
+        <developerConnection>scm:git:git@github.com:serso/android-billing.git</developerConnection>
+        <url>http://github.com/serso/android-billing</url>
+    </scm>
 
 	<properties>
 		<additionalLibs>${basedir}/src/misc/lib</additionalLibs>
@@ -41,7 +53,7 @@
 				<groupId>org.solovyev.android</groupId>
 				<artifactId>android-common-core</artifactId>
 				<type>apklib</type>
-				<version>1.0.0</version>
+				<version>1.0.2</version>
 			</dependency>
 
 			<dependency>
@@ -62,20 +74,20 @@
 				<groupId>org.solovyev.android</groupId>
 				<artifactId>android-common-preferences</artifactId>
 				<type>apklib</type>
-				<version>1.0.0</version>
+				<version>1.0.2</version>
 			</dependency>
 
 			<dependency>
 				<groupId>org.solovyev.android</groupId>
 				<artifactId>android-common-menu</artifactId>
 				<type>apklib</type>
-				<version>1.0.0</version>
+				<version>1.0.2</version>
 			</dependency>
 
 			<dependency>
 				<groupId>org.solovyev.android</groupId>
 				<artifactId>android-common-sherlock</artifactId>
-				<version>1.0.0</version>
+				<version>1.0.2</version>
 				<type>apklib</type>
 			</dependency>
 
@@ -87,27 +99,10 @@
 			</dependency>
 
 			<dependency>
-				<groupId>org.solovyev</groupId>
-				<artifactId>jscl</artifactId>
-				<version>0.0.3</version>
-				<exclusions>
-					<exclusion>
-						<artifactId>xercesImpl</artifactId>
-						<groupId>xerces</groupId>
-					</exclusion>
-
-					<exclusion>
-						<groupId>jgraphx</groupId>
-						<artifactId>jgraphx</artifactId>
-					</exclusion>
-				</exclusions>
-			</dependency>
-
-			<dependency>
 				<groupId>org.solovyev.android</groupId>
 				<artifactId>android-common-other</artifactId>
 				<type>apklib</type>
-				<version>1.0.0</version>
+				<version>1.0.2</version>
 			</dependency>
 
 			<dependency>

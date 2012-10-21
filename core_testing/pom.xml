@@ -7,12 +7,12 @@
 
 	<groupId>org.solovyev.android</groupId>
 	<artifactId>billing-test</artifactId>
-	<version>0.2</version>
+	<version>1.0.0</version>
 
 	<parent>
 		<groupId>org.solovyev.android</groupId>
 		<artifactId>billing-parent</artifactId>
-		<version>0.2</version>
+		<version>1.0.0</version>
 	</parent>
 
 	<packaging>pom</packaging>
@@ -20,25 +20,6 @@
 	<properties>
 		<additionalLibs>${basedir}/src/misc/lib</additionalLibs>
 	</properties>
-
-	<dependencies>
-
-		<dependency>
-			<groupId>org.solovyev.android</groupId>
-			<artifactId>android-common-samples</artifactId>
-			<version>1.0.0</version>
-			<type>apk</type>
-		</dependency>
-
-		<dependency>
-			<groupId>org.solovyev.android</groupId>
-			<artifactId>android-common-samples</artifactId>
-			<version>1.0.0</version>
-			<scope>provided</scope>
-			<type>jar</type>
-		</dependency>
-
-	</dependencies>
 
 	<build>
 
