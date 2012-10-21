@@ -5,12 +5,12 @@
 
 	<groupId>org.solovyev.android</groupId>
 	<artifactId>billing-test</artifactId>
-	<version>1.0.1-SNAPSHOT</version>
+	<version>1.0.1</version>
 
 	<parent>
 		<groupId>org.solovyev.android</groupId>
 		<artifactId>billing-parent</artifactId>
-		<version>1.0.1-SNAPSHOT</version>
+		<version>1.0.1</version>
 	</parent>
 
 	<packaging>pom</packaging>
