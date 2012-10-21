@@ -7,12 +7,12 @@
 
 	<groupId>org.solovyev.android</groupId>
 	<artifactId>dungeons_redux</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.0-SNAPSHOT</version>
 
 	<parent>
 		<groupId>org.solovyev.android</groupId>
 		<artifactId>billing-parent</artifactId>
-		<version>1.0.0</version>
+		<version>1.0.0-SNAPSHOT</version>
 	</parent>
 
 	<packaging>apk</packaging>
@@ -25,8 +25,8 @@
 
 		<dependency>
 			<groupId>org.solovyev.android</groupId>
-			<artifactId>billing</artifactId>
-			<version>1.0.0</version>
+			<artifactId>android-billing</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
 			<type>apklib</type>
 		</dependency>
 
