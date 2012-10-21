@@ -5,13 +5,13 @@
 
 	<groupId>org.solovyev.android</groupId>
 	<artifactId>android-billing</artifactId>
-	<version>1.0.1</version>
+	<version>1.0.2-SNAPSHOT</version>
 	<packaging>apklib</packaging>
 
 	<parent>
 		<groupId>org.solovyev.android</groupId>
 		<artifactId>billing-parent</artifactId>
-		<version>1.0.1</version>
+		<version>1.0.2-SNAPSHOT</version>
 	</parent>
 
 	<properties>
